@@ -1062,6 +1062,31 @@
     display: block;
     font-family: 'Playfair Display', serif;
   }
+
+  /* ── 문의 폼 (기능-001) ── */
+  .inquiry-form .fg{margin-bottom:22px;}
+  .inquiry-form .fg-num{font-family:'Playfair Display',serif;font-style:italic;color:var(--accent);font-size:13px;margin-right:6px;}
+  .inquiry-form .fg-label{font-size:13.5px;font-weight:600;color:var(--black);}
+  .inquiry-form .fg-help{font-size:11.5px;color:var(--gray);margin:5px 0 10px;line-height:1.7;}
+  .inquiry-form .fg-help strong{color:var(--accent);font-weight:600;}
+  .inquiry-form .inp,.inquiry-form .ta{width:100%;background:var(--white);border:1px solid var(--box-border);border-radius:8px;padding:13px 14px;font-size:14px;color:var(--black);font-family:inherit;line-height:1.6;}
+  .inquiry-form .inp::placeholder,.inquiry-form .ta::placeholder{color:var(--gray-light);}
+  .inquiry-form .ta{resize:none;min-height:70px;}
+  .inquiry-form .inp:focus,.inquiry-form .ta:focus{outline:none;border-color:var(--red);}
+  .inquiry-form .ref-box{margin-top:10px;border:1px dashed var(--red-light);border-radius:8px;background:rgba(150,192,112,.08);padding:12px 14px;font-size:11.5px;color:var(--gray);line-height:1.8;}
+  .inquiry-form .ref-box strong{color:var(--accent);font-weight:600;}
+  .inquiry-form .insta-group{display:flex;align-items:center;flex-wrap:wrap;background:var(--white);border:1px solid var(--box-border);border-radius:8px;padding:2px 6px 2px 12px;}
+  .inquiry-form .insta-group:focus-within{border-color:var(--red);}
+  .inquiry-form .insta-prefix{font-size:12.5px;color:var(--gray);white-space:nowrap;user-select:none;}
+  .inquiry-form .insta-handle{flex:1;min-width:90px;border:none;padding:11px 4px;background:transparent;font-size:14px;color:var(--black);font-family:inherit;}
+  .inquiry-form .insta-handle:focus{outline:none;}
+  .inquiry-form .insta-handle::placeholder{color:var(--gray-light);}
+  .inquiry-preview-wrap{padding:0 24px 8px;}
+  .inquiry-preview-cap{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-family:'Playfair Display',serif;margin-bottom:10px;}
+  .inquiry-preview{background:var(--white);border:1px solid var(--box-border);border-left:3px solid var(--accent);border-radius:8px;padding:16px;font-size:13.5px;color:var(--black);line-height:1.95;white-space:pre-line;}
+  .inquiry-preview .muted{color:var(--gray-light);}
+  .inquiry-toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--accent);color:var(--white);font-size:13px;padding:13px 20px;border-radius:24px;box-shadow:0 6px 20px rgba(42,56,32,.25);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:50;max-width:88%;text-align:center;line-height:1.5;}
+  .inquiry-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -1609,14 +1634,63 @@
   </div>
 </section>
 
+<!-- ── 문의 작성 폼 (기능-001) ── -->
+<section class="section inquiry-form">
+  <div class="section-label">Inquiry · 문의하기</div>
+  <h2 class="section-title">문의 전, 아래만<br>가볍게 채워주세요 🙂</h2>
+  <div class="body-text" style="margin-bottom:24px;">
+    아래 세 가지만 적어주시면<br>
+    제가 훨씬 빠르고 정확하게 안내드릴 수 있어요.<br>
+    다 채우면 아래에 <strong>보낼 문구가 자동으로 정리</strong>돼요.
+  </div>
+
+  <!-- 1. 성함 -->
+  <div class="fg">
+    <div><span class="fg-num">01</span><span class="fg-label">성함</span></div>
+    <div class="fg-help">편하게 불러드릴 이름이면 돼요.</div>
+    <input class="inp" id="f-name" type="text" placeholder="예) 홍길동" oninput="renderInquiry()">
+  </div>
+
+  <!-- 2. 어떤 나를 남기고 싶은지 -->
+  <div class="fg">
+    <div><span class="fg-num">02</span><span class="fg-label">이번 촬영으로 어떤 '나'를 남기고 싶으세요?</span></div>
+    <div class="fg-help">maydly는 <strong>'나를 남기는'</strong> 촬영이에요. 이번에 담고 싶은
+      나의 모습·순간을 편하게 적어주세요 🙂🙏🏻<br>
+      <span style="color:var(--gray-light)">마음에 든 참고사진이 있다면 "이 사진처럼 ○○한 나" 이렇게 적어주셔도 좋아요.</span></div>
+    <textarea class="ta" id="f-keep" placeholder="예) 지금이 아니면 못 담을, 지금의 나 / 꾸민 모습 말고 편안한 진짜 나 / 화려하기보다 잔잔하고 담담한 느낌으로" oninput="renderInquiry()"></textarea>
+    <div class="ref-box">
+      📷 <strong>참고사진</strong>이 있으시면 아래 카카오채널로 넘어간 뒤
+      <strong>캡처해서 함께</strong> 보내주시면 돼요.
+    </div>
+  </div>
+
+  <!-- 3. 인스타 -->
+  <div class="fg">
+    <div><span class="fg-num">03</span><span class="fg-label">인스타그램 계정</span></div>
+    <div class="fg-help">아래 <strong>계정 아이디만</strong> 적어주시면 돼요 (예: maydly_u). 비공개면 개인 사진 몇 장도 함께 부탁드려요.</div>
+    <div class="insta-group">
+      <span class="insta-prefix">https://www.instagram.com/</span>
+      <input class="insta-handle" id="f-insta" type="text" placeholder="maydly_u" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="renderInquiry()">
+    </div>
+  </div>
+</section>
+
+<!-- 자동 정리 미리보기 -->
+<div class="inquiry-preview-wrap">
+  <div class="inquiry-preview-cap">↓ 이렇게 정리돼서 전송돼요</div>
+  <div class="inquiry-preview" id="inquiry-preview"></div>
+</div>
+
 <!-- ── CTA ── -->
 <section class="cta-section">
   <div class="cta-text">
-    보신 방향 중에서 가장 끌리는<br>
-    시안이나 분위기가 있으시면<br>
-    카카오 채널로 편하게 말씀해주세요 🙂
+    다 채우셨다면 아래 버튼으로<br>
+    카카오채널에 바로 붙여넣어 보내주세요 🙂
   </div>
-  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn">카카오 채널로 연락하기</a>
+  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn" onclick="copyInquiry()">카카오 채널로 연락하기</a>
+  <div class="body-text" style="font-size:11.5px;color:var(--gray);margin-top:14px;line-height:1.7;">
+    버튼을 누르면 위 문구가 자동 복사되고 카카오채널이 열려요. 붙여넣기만 해주세요.
+  </div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -1783,7 +1857,82 @@
   </div>
 </div>
 
+<!-- 문의 폼 토스트 (기능-001) -->
+<div class="inquiry-toast" id="inquiry-toast"></div>
 
+<script>
+  (function(){
+    var KAKAO_CHAT = 'http://pf.kakao.com/_pxnxgbn/chat';
+    function val(id){ var el=document.getElementById(id); return el?(el.value||'').trim():''; }
+    function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // 아이디만 뽑아 정리(전체 URL·@ 붙여넣어도 정돈)
+    function instaUrl(){
+      var h = val('f-insta');
+      if(!h) return '';
+      h = h.replace(/^https?:\/\/(www\.)?instagram\.com\//i,''); // 전체 링크 붙여넣은 경우
+      h = h.replace(/^@+/,'').replace(/\/+$/,'').trim();          // 앞 @·뒤 / 제거
+      if(!h) return '';
+      return 'https://www.instagram.com/' + h + '/';
+    }
+
+    function buildMessage(){
+      var insta = instaUrl();
+      var lines = ['안녕하세요, maydly 문의드려요 :)'];
+      lines.push('· 성함 : ' + (val('f-name') || '(미입력)'));
+      lines.push('· 남기고 싶은 나 : ' + (val('f-keep') || '(미입력)'));
+      lines.push('· 인스타 : ' + (insta || '(미입력)'));
+      lines.push('(참고사진은 이어서 캡처로 보낼게요)');
+      return lines.join('\n');
+    }
+
+    window.renderInquiry = function(){
+      function line(label, v){
+        if(v) return '· ' + label + ' : ' + esc(v);
+        return '<span class="muted">· ' + label + ' : (아직 안 적으셨어요)</span>';
+      }
+      var html = '안녕하세요, maydly 문의드려요 :)\n'
+        + line('성함', val('f-name')) + '\n'
+        + line('남기고 싶은 나', val('f-keep')) + '\n'
+        + line('인스타', instaUrl()) + '\n'
+        + '<span class="muted">(참고사진은 이어서 캡처로 보낼게요)</span>';
+      var p = document.getElementById('inquiry-preview');
+      if(p) p.innerHTML = html;
+    };
+
+    function toast(msg){
+      var t = document.getElementById('inquiry-toast');
+      if(!t) return;
+      t.innerHTML = msg; t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 3200);
+    }
+
+    function fallbackCopy(msg){
+      var ta = document.createElement('textarea');
+      ta.value = msg; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      toast(ok ? '✅ 복사됐어요! 카카오 채팅창에 붙여넣기 해주세요.'
+               : '카카오 채팅창이 열려요. 위 정리글을 복사해 붙여넣어 주세요.');
+    }
+
+    // 링크는 기본 동작(target=_blank)으로 카카오가 열림. 그 전에 복사만 수행.
+    window.copyInquiry = function(){
+      var msg = buildMessage();
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(msg).then(function(){
+          toast('✅ 문의 내용이 복사됐어요!<br>카카오 채팅창에 붙여넣기(길게 눌러 붙여넣기) 해주세요.');
+        }).catch(function(){ fallbackCopy(msg); });
+      } else {
+        fallbackCopy(msg);
+      }
+      return true; // 링크 이동 허용
+    };
+
+    renderInquiry();
+  })();
+</script>
 
 </body>
 </html>
