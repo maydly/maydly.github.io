@@ -1063,7 +1063,14 @@
     font-family: 'Playfair Display', serif;
   }
 
-  /* ── 문의 폼 (기능-001) ── */
+  /* ── 문의 폼 (기능-001) — 시안 톤에 맞춰 은은하게 ── */
+  .inquiry-notice{border:1px solid var(--box-border);border-radius:8px;padding:16px 18px;margin-bottom:26px;font-size:13px;line-height:2;color:var(--black);}
+  .inquiry-notice .in-title{font-family:'Playfair Display',serif;font-weight:500;color:var(--accent);font-size:12px;letter-spacing:1px;margin-bottom:8px;display:block;}
+  .inquiry-notice strong{color:var(--accent);font-weight:600;}
+  .inquiry-notice .in-steps{margin-top:12px;padding-top:12px;border-top:1px solid var(--cream-dark);font-size:12.5px;line-height:2.1;color:var(--black);}
+  .inquiry-notice .in-steps b{display:inline-block;min-width:18px;height:18px;line-height:16px;text-align:center;border:1px solid var(--red);color:var(--red);border-radius:50%;font-size:11px;margin-right:7px;font-weight:600;font-style:normal;}
+  .inquiry-cta .cta-warn{font-size:11.5px;color:var(--gray);margin-top:14px;line-height:1.85;}
+  .inquiry-cta .cta-warn strong{color:var(--accent);font-weight:600;}
   .inquiry-form .fg{margin-bottom:22px;}
   .inquiry-form .fg-num{font-family:'Playfair Display',serif;font-style:italic;color:var(--accent);font-size:13px;margin-right:6px;}
   .inquiry-form .fg-label{font-size:13.5px;font-weight:600;color:var(--black);}
@@ -1637,11 +1644,22 @@
 <!-- ── 문의 작성 폼 (기능-001) ── -->
 <section class="section inquiry-form">
   <div class="section-label">Inquiry · 문의하기</div>
-  <h2 class="section-title">문의 전, 아래만<br>가볍게 채워주세요 🙂</h2>
-  <div class="body-text" style="margin-bottom:24px;">
-    아래 세 가지만 적어주시면<br>
-    제가 훨씬 빠르고 정확하게 안내드릴 수 있어요.<br>
-    다 채우면 아래에 <strong>보낼 문구가 자동으로 정리</strong>돼요.
+  <h2 class="section-title">문의 전, 아래만<br>채워주세요 🙂</h2>
+
+  <div class="cta-text" style="text-align:left;font-size:14px;margin-bottom:24px;">
+    maydly의 촬영은 <strong style="color:var(--accent)">모델님을 가장 모델님답게 남기는</strong> 작업이에요.<br>
+    그 모습을 함께 그려가기 위해, 아래 몇 가지만 여쭤볼게요 🙂🍀
+  </div>
+
+  <div class="inquiry-notice">
+    <span class="in-title">🍀 작성 방법, 딱 세 단계예요</span>
+    아래 세 칸을 편하게 채워주세요. 다 적으시면 버튼 한 번으로 내용이 <strong>자동으로 복사</strong>돼요.
+    그다음 열리는 <strong>카카오 채팅창에 붙여넣어</strong> 주시면 제가 확인하고 안내드릴게요 🙂🙏🏻
+    <div class="in-steps">
+      <b>1</b>아래 세 칸 작성하기<br>
+      <b>2</b>버튼 누르기 <span style="color:var(--gray)">(내용이 자동으로 복사돼요)</span><br>
+      <b>3</b>카카오 채팅창에 붙여넣기 <span style="color:var(--gray)">(길게 눌러 붙여넣기)</span>
+    </div>
   </div>
 
   <!-- 1. 성함 -->
@@ -1659,8 +1677,9 @@
       <span style="color:var(--gray-light)">마음에 든 참고사진이 있다면 "이 사진처럼 ○○한 나" 이렇게 적어주셔도 좋아요.</span></div>
     <textarea class="ta" id="f-keep" placeholder="예) 지금이 아니면 못 담을, 지금의 나 / 꾸민 모습 말고 편안한 진짜 나 / 화려하기보다 잔잔하고 담담한 느낌으로" oninput="renderInquiry()"></textarea>
     <div class="ref-box">
-      📷 <strong>참고사진</strong>이 있으시면 아래 카카오채널로 넘어간 뒤
-      <strong>캡처해서 함께</strong> 보내주시면 돼요.
+      📷 시안에서 <strong>관심 있게 보신 사진</strong>, 원하는 분위기,
+      <strong>해보고 싶은 촬영 사진</strong>이 있다면 —<br>
+      버튼을 눌러 카카오로 넘어가신 뒤 <strong>캡처해서 함께</strong> 보내주시면 큰 도움이 돼요 🙂
     </div>
   </div>
 
@@ -1677,19 +1696,20 @@
 
 <!-- 자동 정리 미리보기 -->
 <div class="inquiry-preview-wrap">
-  <div class="inquiry-preview-cap">↓ 이렇게 정리돼서 전송돼요</div>
+  <div class="inquiry-preview-cap">↓ 이 내용이 복사돼요 (카카오에 붙여넣기)</div>
   <div class="inquiry-preview" id="inquiry-preview"></div>
 </div>
 
 <!-- ── CTA ── -->
-<section class="cta-section">
+<section class="cta-section inquiry-cta">
   <div class="cta-text">
-    다 채우셨다면 아래 버튼으로<br>
-    카카오채널에 바로 붙여넣어 보내주세요 🙂
+    다 채우셨나요? 아래 버튼을 누르면<br>
+    위 내용이 <strong style="color:var(--accent)">자동으로 복사</strong>돼요 🙂
   </div>
-  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn" onclick="copyInquiry()">카카오 채널로 연락하기</a>
-  <div class="body-text" style="font-size:11.5px;color:var(--gray);margin-top:14px;line-height:1.7;">
-    버튼을 누르면 위 문구가 자동 복사되고 카카오채널이 열려요. 붙여넣기만 해주세요.
+  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn" onclick="copyInquiry()">작성내용 복사하고 카카오로 이동 🍀</a>
+  <div class="cta-warn">
+    복사된 내용을 <strong>카카오 채팅창에 붙여넣어</strong> 주시면 접수 완료예요.<br>
+    편하게 보내주시면 확인하고 안내드릴게요 🙂🍀
   </div>
 </section>
 
@@ -1882,7 +1902,6 @@
       lines.push('· 성함 : ' + (val('f-name') || '(미입력)'));
       lines.push('· 남기고 싶은 나 : ' + (val('f-keep') || '(미입력)'));
       lines.push('· 인스타 : ' + (insta || '(미입력)'));
-      lines.push('(참고사진은 이어서 캡처로 보낼게요)');
       return lines.join('\n');
     }
 
@@ -1894,8 +1913,7 @@
       var html = '안녕하세요, maydly 문의드려요 :)\n'
         + line('성함', val('f-name')) + '\n'
         + line('남기고 싶은 나', val('f-keep')) + '\n'
-        + line('인스타', instaUrl()) + '\n'
-        + '<span class="muted">(참고사진은 이어서 캡처로 보낼게요)</span>';
+        + line('인스타', instaUrl());
       var p = document.getElementById('inquiry-preview');
       if(p) p.innerHTML = html;
     };
