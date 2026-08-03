@@ -1887,13 +1887,16 @@
     function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     // 아이디만 뽑아 정리(전체 URL·@ 붙여넣어도 정돈)
-    function instaUrl(){
+    function instaHandle(){
       var h = val('f-insta');
       if(!h) return '';
       h = h.replace(/^https?:\/\/(www\.)?instagram\.com\//i,''); // 전체 링크 붙여넣은 경우
       h = h.replace(/^@+/,'').replace(/\/+$/,'').trim();          // 앞 @·뒤 / 제거
-      if(!h) return '';
-      return 'https://www.instagram.com/' + h + '/';
+      return h;
+    }
+    function instaUrl(){
+      var h = instaHandle();
+      return h ? 'https://www.instagram.com/' + h + '/' : '';
     }
 
     function buildMessage(){
@@ -1938,6 +1941,12 @@
     // 링크는 기본 동작(target=_blank)으로 카카오가 열림. 그 전에 복사만 수행.
     window.copyInquiry = function(){
       var msg = buildMessage();
+      // 설문데이터 DB 저장(입력이 하나라도 있을 때) — 실패해도 복사·카카오는 진행
+      try{
+        if(window.saveInquiry && (val('f-name') || val('f-keep') || instaHandle())){
+          window.saveInquiry(val('f-name'), val('f-keep'), instaHandle());
+        }
+      }catch(e){}
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(msg).then(function(){
           toast('✅ 문의 내용이 복사됐어요!<br>카카오 채팅창에 붙여넣기(길게 눌러 붙여넣기) 해주세요.');
@@ -1950,6 +1959,23 @@
 
     renderInquiry();
   })();
+</script>
+
+<!-- 설문데이터 저장 (Firestore, subin-routine) — 폼 제출 시 문의 기록 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const app = initializeApp({ apiKey:"AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM", authDomain:"subin-routine.firebaseapp.com", projectId:"subin-routine" });
+  const db = getFirestore(app);
+  const COLLECTION = "maydly_inquiries_test"; // ⚠️ 검증용. 8/1 실가동 시 "maydly_inquiries"로 변경
+  window.saveInquiry = async function(name, keep, instaHandle){
+    try{
+      await addDoc(collection(db, COLLECTION), {
+        name: name||"", keep: keep||"", insta: instaHandle||"",
+        status: "신규", source: "maydly_form", ts: serverTimestamp()
+      });
+    }catch(e){ /* 저장 실패해도 고객 경험(카카오 복사)은 막지 않음 */ }
+  };
 </script>
 
 </body>
