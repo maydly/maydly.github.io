@@ -1706,7 +1706,7 @@
     다 채우셨나요? 아래 버튼을 누르면<br>
     위 내용이 <strong style="color:var(--accent)">자동으로 복사</strong>돼요 🙂
   </div>
-  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn" onclick="copyInquiry()">작성내용 복사하고 카카오로 이동 🍀</a>
+  <a href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" class="cta-btn" onclick="return copyInquiry(event)">작성내용 복사하고 카카오로 이동 🍀</a>
   <div class="cta-warn">
     복사된 내용을 <strong>카카오 채팅창에 붙여넣어</strong> 주시면 접수 완료예요.<br>
     편하게 보내주시면 확인하고 안내드릴게요 🙂🍀
@@ -1939,14 +1939,15 @@
     }
 
     // 링크는 기본 동작(target=_blank)으로 카카오가 열림. 그 전에 복사만 수행.
-    window.copyInquiry = function(){
+    var DBG = location.search.indexOf('debug') >= 0;
+    window.copyInquiry = function(ev){
       var msg = buildMessage();
       // 설문데이터 DB 저장(입력이 하나라도 있을 때) — 실패해도 복사·카카오는 진행
       try{
         if(window.saveInquiry && (val('f-name') || val('f-keep') || instaHandle())){
           window.saveInquiry(val('f-name'), val('f-keep'), instaHandle());
         }
-      }catch(e){}
+      }catch(e){ if(DBG) alert('🧪 저장 호출 예외: '+e); }
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(msg).then(function(){
           toast('✅ 문의 내용이 복사됐어요!<br>카카오 채팅창에 붙여넣기(길게 눌러 붙여넣기) 해주세요.');
@@ -1954,7 +1955,9 @@
       } else {
         fallbackCopy(msg);
       }
-      return true; // 링크 이동 허용
+      // 디버그 모드에선 카카오로 이동하지 않고 페이지에 머물러 저장 결과(알림)를 보게 함
+      if(DBG){ if(ev && ev.preventDefault) ev.preventDefault(); return false; }
+      return true; // 평소엔 링크 이동 허용(카카오 열림)
     };
 
     renderInquiry();
@@ -1968,13 +1971,14 @@
   const app = initializeApp({ apiKey:"AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM", authDomain:"subin-routine.firebaseapp.com", projectId:"subin-routine" });
   const db = getFirestore(app);
   const COLLECTION = "maydly_inquiries_test"; // ⚠️ 검증용. 8/1 실가동 시 "maydly_inquiries"로 변경
-  window.saveInquiry = async function(name, keep, instaHandle){
-    try{
-      await addDoc(collection(db, COLLECTION), {
+  var DBG = location.search.indexOf('debug') >= 0;
+  window.saveInquiry = function(name, keep, instaHandle){
+    return addDoc(collection(db, COLLECTION), {
         name: name||"", keep: keep||"", insta: instaHandle||"",
         status: "신규", source: "maydly_form", ts: serverTimestamp()
-      });
-    }catch(e){ /* 저장 실패해도 고객 경험(카카오 복사)은 막지 않음 */ }
+      })
+      .then(function(ref){ if(DBG) alert('🧪 저장 성공!\ndoc id: '+ref.id); return true; })
+      .catch(function(e){ if(DBG) alert('🧪 저장 실패\ncode: '+(e&&e.code?e.code:'')+'\nmsg: '+(e&&e.message?e.message:e)); /* 고객경험(복사)은 막지 않음 */ });
   };
 </script>
 
