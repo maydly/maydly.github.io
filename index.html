@@ -66,17 +66,17 @@
   .kicker{font-size:.78rem; letter-spacing:.18em; color:var(--accentD); font-weight:600; text-transform:uppercase;}
   h2.big{font-size:clamp(1.65rem,4.3vw,2.5rem); font-weight:500; letter-spacing:-.02em; line-height:1.2; margin-top:16px;}
   .lead{color:var(--tx2); font-size:clamp(1rem,2vw,1.15rem); margin-top:20px; line-height:1.75;}
-  .body{max-width:640px; margin:24px auto 0; color:var(--tx); font-size:1.01rem; line-height:1.9;}
+  .body{max-width:640px; margin:24px auto 0; color:var(--tx); font-size:1.01rem; line-height:2.05;}
   .body p{margin:16px 0;} .body b, .body strong{color:var(--accentD); font-weight:600;}
   .pull{font-size:clamp(1.35rem,3.5vw,2.05rem); font-weight:500; letter-spacing:-.02em; line-height:1.4; color:var(--tx);}
   .pull .g{color:var(--accentD);}
 
   /* 강조 네모박스 (시각적 위계 — 스킴해도 읽히게) */
   .callout-box{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px;
-    padding:18px 20px; margin:22px auto; max-width:640px; text-align:left; font-size:.98rem; line-height:1.85; color:var(--tx);}
+    padding:19px 22px; margin:22px auto; max-width:640px; text-align:left; font-size:.98rem; line-height:2.0; color:var(--tx);}
   .callout-box b{color:var(--accentD); font-weight:600;}
   .callout-box.quote{background:#fff; border-left-color:var(--accentD); border-color:#d7e3d0; box-shadow:0 4px 16px rgba(63,125,87,.08);
-    font-family:'Noto Serif KR',serif; font-style:normal; color:var(--accentD); font-size:1.05rem; line-height:1.9;}
+    font-family:'Noto Serif KR',serif; font-style:normal; color:var(--accentD); font-size:1.05rem; line-height:2.1;}
   .callout-box.quote b{font-style:normal;}
   .callout-box.q3{font-family:'Noto Serif KR',serif; font-size:1.1rem; color:var(--accentD); text-align:center; line-height:1.95;}
   .callout-box.mini{margin:16px 0; font-size:.95rem;}
@@ -116,7 +116,7 @@
   .acc .q .pm{color:var(--accent); font-size:1.5rem; font-weight:300; transition:transform .3s; flex:none;}
   .acc.open .q .pm{transform:rotate(45deg);}
   .acc .a{max-height:0; overflow:hidden; transition:max-height .5s ease;}
-  .acc .a .inner{padding:2px 4px 26px; color:var(--tx2); font-size:1.02rem; line-height:1.85;}
+  .acc .a .inner{padding:2px 4px 26px; color:var(--tx2); font-size:1.02rem; line-height:1.95;}
   .acc .a .inner b{color:var(--accentD); font-weight:600;}
   .acc .a .sub{margin:16px 0 4px; font-weight:700; color:var(--tx);}
 
@@ -176,7 +176,10 @@
   .inquiry-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   /* 폰 전용: 글씨·여백 한 단계 더 축소 */
+  .dbr{display:inline;}
   @media(max-width:560px){
+    .dbr{display:none;}
+    .body{line-height:2.0;} .callout-box{line-height:1.95;} .acc .a .inner{line-height:1.9;}
     section{padding:58px 0;}
     .hero{padding:84px 22px 62px;}
     .hero h1{font-size:1.95rem;}
@@ -253,7 +256,7 @@
     <p>요즘 사진이 단순히 예쁘게 나오는 걸 넘어서, ‘지금의 나’를 남기는 하나의 기록으로 받아들여지는 경우가 많죠. 저 역시 그런 촬영을 지향하고 있어요.</p>
     <p>저는 촬영을 통해 모델님이 가진 분위기, 감정, 그리고 지금 보여주고 싶은 모습을 호리존에서 자연스럽고 편안하게 담아내고 싶어요.</p>
   </div>
-  <div class="callout-box quote">단순히 ‘예쁘게 나오는 컷’이 아니라,<br>시간이 지나도 그 순간의 내가 고스란히 느껴지는 사진.<br>그게 제 촬영의 핵심이에요.</div>
+  <div class="callout-box quote">단순히 ‘예쁘게 나오는 컷’이 아니라,<br class="dbr">시간이 지나도 그 순간의 내가 고스란히 느껴지는 사진.<br class="dbr">그게 제 촬영의 핵심이에요.</div>
   <div class="body">
     <p>그리고 이 모든 과정은 저 혼자 만드는 게 아니에요. 디자이너 <b>수빈</b>님과 둘이 함께, 시안 방향부터 스타일링까지 같이 준비하고 있어요.</p>
     <p>두 사람의 시선이 더해지는 만큼, 모델님께 맞는 방향을 더 섬세하게 잡아갈 수 있어요 🙂</p>
@@ -269,7 +272,7 @@
   <div class="body">
     <p>예쁘게, 멋있게 남기고 싶은 마음은 당연해요. 다만 그 사진의 사람이 왜 그렇게 보였는지, 나는 왜 지금의 나를 그렇게 담고 싶었는지 한 번만 더 생각해 주시면 충분해요.</p>
   </div>
-  <div class="callout-box quote">완벽하게 해야 한다는 생각은 내려두셔도 괜찮아요.<br>나라는 사람을 완벽이라는 단어로 표현할 수 없으니까요.<br><b>난데 뭐 어때</b> — 그 마음으로 와주시면 돼요.<br>나다운 게 아름다운 거고, 아름다운 게 나다운 거니까요.</div>
+  <div class="callout-box quote">완벽하게 해야 한다는 생각은 내려두셔도 괜찮아요.<br class="dbr">나라는 사람을 완벽이라는 단어로 표현할 수 없으니까요.<br class="dbr"><b>난데 뭐 어때</b> — 그 마음으로 와주시면 돼요.<br class="dbr">나다운 게 아름다운 거고, 아름다운 게 나다운 거니까요.</div>
   <div class="body">
     <p>시안은 따라 하는 기준이 아니라, “저 사람은 왜 저런 분위기로 보이는지”를 느껴보는 참고 자료예요. 처음이어도 괜찮아요. 오히려 더 솔직한 모습이 나오는 경우가 많아요.</p>
   </div>
@@ -337,7 +340,7 @@
     <div class="card"><div class="en">02</div><h3>서브 촬영</h3><p>메인에서 잡힌 분위기를 바탕으로, 제가 모델님께 어울릴 것 같은 다른 결의 방향을 하나 제안드려요. 같이 상의하면서 맞춰가는 방식이라 편하게 생각해주셔도 돼요.</p></div>
   </div>
   <p class="note">결과물 장수·전달 방식·원본·워터마크 안내는 아래 <b style="color:var(--accentD)">필독 공지사항</b>에 정리해뒀어요.</p>
-  <div class="callout-box mini" style="text-align:center; max-width:620px; margin-top:20px;">🎞 <b>폴라로이드 · 빈티지 디카</b>는 기본 구성은 아니에요.<br>촬영 흐름상 가능한 경우에 한해 <b>기념으로 함께 기록</b>해드려요 🙂</div>
+  <div class="callout-box mini" style="text-align:center; max-width:620px; margin-top:20px;">🎞 <b>폴라로이드 · 빈티지 디카</b>는 기본 구성은 아니에요.<br class="dbr">촬영 흐름상 가능한 경우에 한해 <b>기념으로 함께 기록</b>해드려요 🙂</div>
 </div></section>
 
 <!-- 준비 참고 -->
@@ -392,9 +395,9 @@
   <div class="kicker">촬영 공간 · Studio</div>
   <h2 class="big serif">촬영 공간 안내</h2>
   <div class="callout-box" style="margin-top:26px;">
-    촬영은 <b>서울 둔촌동 호리존 스튜디오</b>에서 진행해요.<br>해당 스튜디오에 <b>제 소유의 촬영 장비와 소품, 배경지 등을 보관</b> 중이며,<br>같은 공간에서 꾸준히 촬영하다 보면 공간에 대한 이해도가 쌓이고,<br>그게 사진의 일관성과 완성도로 이어진다고 생각해요.<br><br>
-    촬영 일정이 확정되면 스튜디오 대관 비용이 발생하며,<br>해당 비용은 모델님과 <b>n/1 기준으로 나누어 부담</b>합니다.<br>대관 비용은 예약 시점의 스튜디오 요금을 기준으로 사전에 안내드려요.<br><br>
-    <b>별도의 촬영비는 받지 않아요.</b> 모델님이 부담하시는 건<br>스튜디오 대관료를 n/1로 나눈 금액뿐이에요.<br>원하시는 추가 결과물이 있을 때만 아래 ‘별도 요청 비용’이 발생합니다.
+    촬영은 <b>서울 둔촌동 호리존 스튜디오</b>에서 진행해요.<br class="dbr">해당 스튜디오에 <b>제 소유의 촬영 장비와 소품, 배경지 등을 보관</b> 중이며,<br class="dbr">같은 공간에서 꾸준히 촬영하다 보면 공간에 대한 이해도가 쌓이고,<br class="dbr">그게 사진의 일관성과 완성도로 이어진다고 생각해요.<br><br>
+    촬영 일정이 확정되면 스튜디오 대관 비용이 발생하며,<br class="dbr">해당 비용은 모델님과 <b>n/1 기준으로 나누어 부담</b>합니다.<br class="dbr">대관 비용은 예약 시점의 스튜디오 요금을 기준으로 사전에 안내드려요.<br><br>
+    <b>별도의 촬영비는 받지 않아요.</b> 모델님이 부담하시는 건<br class="dbr">스튜디오 대관료를 n/1로 나눈 금액뿐이에요.<br class="dbr">원하시는 추가 결과물이 있을 때만 아래 ‘별도 요청 비용’이 발생합니다.
   </div>
 </div></section>
 
