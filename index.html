@@ -123,9 +123,11 @@
   .acc .a .inner b{color:var(--accentD); font-weight:600;}
   .acc .a .sub{margin:16px 0 4px; font-weight:700; color:var(--tx);}
 
-  .flow{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:48px;}
-  .flow .f{background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 18px; font-size:.92rem; color:var(--tx); display:flex; align-items:center; gap:10px;}
-  .flow .f .fn{font-family:'Noto Serif KR',serif; color:var(--accent); font-weight:600;}
+  /* 진행 흐름 — 세로 순서형(타임라인) */
+  .flow{display:flex; flex-direction:column; gap:0; max-width:460px; margin:44px auto 0; text-align:left;}
+  .flow .f{position:relative; display:flex; align-items:center; gap:16px; padding:9px 0; font-size:.99rem; color:var(--tx); background:none; border:none; border-radius:0;}
+  .flow .f .fn{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-family:'Noto Serif KR',serif; font-weight:600; font-size:.9rem; flex:none; position:relative; z-index:1;}
+  .flow .f:not(:last-child)::before{content:''; position:absolute; left:17px; top:50%; height:100%; border-left:2px solid #cddcc7; z-index:0;}
 
   .grid3{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:48px; text-align:left;}
   @media(max-width:820px){.grid3{grid-template-columns:1fr;}}
@@ -210,7 +212,10 @@
     .pin-btn .pin-txt b{font-size:.93rem;}
     .pin-btn .pin-sub{font-size:.8rem;}
     .card h3{font-size:1.02rem;} .card p{font-size:.9rem;}
-    .flow .f{font-size:.86rem; padding:12px 14px;}
+    .flow{max-width:100%;}
+    .flow .f{font-size:.92rem; padding:7px 0; gap:13px;}
+    .flow .f .fn{width:32px; height:32px; font-size:.85rem;}
+    .flow .f:not(:last-child)::before{left:15px;}
     .fg-label{font-size:1rem;} .fg-help{font-size:.88rem;}
     .how{font-size:.9rem;} .how .steps span{font-size:.88rem;}
     .price .row{font-size:.92rem;}
@@ -297,7 +302,7 @@
   <!-- 01 의상 -->
   <div class="concept-block reveal sm-clothes">
     <div class="cb-head"><span class="cb-num">01</span><div class="cb-title"><h3>의상 <span class="cb-en">Styling Focus</span></h3><p data-lb="c01-sub">내가 어떤 사람인지를 보여주는 하나의 선택지</p></div></div>
-    <a class="pin-btn" href="https://pin.it/2tCzZzHa3" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Styling Focus 시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음(핀터레스트)으로 이동해요 ›</span></span></a>
+    <a class="pin-btn" href="https://pin.it/2tCzZzHa3" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Styling Focus<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
     <div class="acc"><button class="q"><span class="qt">의상 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
       옷을 잘 입는 사람만을 위한 촬영이 아니라, 그 옷을 입은 사람이 어떤 분위기와 톤을 가지고 있는지가 더 잘 보이는 촬영이에요. 지금의 나를 가장 편하게 보여줄 수 있는 옷이면 충분해요. 중요한 건 잘 어울리게 입었는지보다, <b>그 옷을 입었을 때 내가 얼마나 편안한지</b>예요.
       <div class="sub">A. 평소의 나를 가장 잘 보여주는 옷</div>가장 자주 손이 가는 옷, 입었을 때 몸이 편하고 기분이 좋아지는 옷이면 충분해요. “꾸민 느낌”이 아니어도 괜찮고, 오히려 자연스러울수록 사진에서도 편안한 분위기가 잘 담겨요.
@@ -310,7 +315,7 @@
   <!-- 02 소품 -->
   <div class="concept-block reveal">
     <div class="cb-head"><span class="cb-num">02</span><div class="cb-title"><h3>소품 · 악세서리 <span class="cb-en">Object / Accessory</span></h3><p data-lb="c02-sub">촬영을 조금 더 편안하게 만들어주는 요소</p></div></div>
-    <a class="pin-btn" href="https://pin.it/aUXJM7zLa" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Object / Accessory 시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음(핀터레스트)으로 이동해요 ›</span></span></a>
+    <a class="pin-btn" href="https://pin.it/aUXJM7zLa" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Object / Accessory<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
     <div class="acc"><button class="q"><span class="qt">소품 · 악세서리 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
       촬영을 조금 더 편안하게 만들어주는 요소예요! 촬영하다 보면 손을 어디에 둬야 할지, 어떤 표정을 지어야 할지 애매한 순간이 생기는데, 소품이나 악세서리 하나만 있어도 그 부담이 자연스럽게 줄어들어요. 중요한 건 그 소품이 <b>‘나를 조금 더 편하게 만들어주는지’</b>예요.
       <div class="sub">A. 평소에 자주 사용하는 소품 / 악세서리</div>평소에 자주 착용하는 반지나 목걸이, 늘 들고 다니는 가방이나 물건처럼 이미 내 몸과 생활에 익숙한 아이템이면 좋아요. 이런 소품은 촬영할 때도 자연스럽게 손이 가고, 표정이나 자세도 훨씬 편안하게 만들어줘요.
@@ -323,7 +328,7 @@
   <!-- 03 색상 -->
   <div class="concept-block reveal">
     <div class="cb-head"><span class="cb-num">03</span><div class="cb-title"><h3>색상 <span class="cb-en">Color Point</span></h3><p data-lb="c03-sub">지금의 나를 가장 직관적으로 보여주는 기준</p></div></div>
-    <a class="pin-btn" href="https://pin.it/2BPpkOd47" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Color Point 시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음(핀터레스트)으로 이동해요 ›</span></span></a>
+    <a class="pin-btn" href="https://pin.it/2BPpkOd47" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Color Point<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
     <div class="acc"><button class="q"><span class="qt">색상 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
       이번 촬영에서 가장 가볍게 방향을 잡을 수 있는 방식이에요. 의상 전체를 고민하지 않아도, 색 하나만 정해도 촬영 방향이 또렷해질 수 있어요. “이 색이 잘 어울릴까?”보다는, <b>“요즘 내가 왜 이 색에 끌리는지”</b>를 더 중요하게 봐요.
       <div class="sub">A. 요즘 가장 눈에 들어오는 색 하나</div>최근에 옷이나 소품을 고를 때 유독 자주 눈에 들어오는 색이 있을 거예요. 강한 색이어도 괜찮고, 파스텔처럼 아주 은은한 색이어도 괜찮아요. 그 색 하나가 전체 분위기를 잡아주는 기준이 돼요.
