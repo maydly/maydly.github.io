@@ -174,6 +174,41 @@
   .form-cta{text-align:center; margin-top:30px;}
   .inquiry-toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(20px); background:var(--accentD); color:#fff; font-size:.9rem; padding:13px 20px; border-radius:24px; box-shadow:0 6px 20px rgba(30,40,25,.28); opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:60; max-width:88%; text-align:center; line-height:1.5;}
   .inquiry-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* 폰 전용: 글씨·여백 한 단계 더 축소 */
+  @media(max-width:560px){
+    section{padding:58px 0;}
+    .hero{padding:84px 22px 62px;}
+    .hero h1{font-size:1.95rem;}
+    .hero .sub{font-size:.95rem; margin-top:16px;}
+    .hero .who{font-size:.86rem;}
+    .kicker{font-size:.7rem; letter-spacing:.14em;}
+    h2.big{font-size:1.38rem; margin-top:12px;}
+    .lead{font-size:.94rem; margin-top:14px;}
+    .body{font-size:.94rem;}
+    .pull{font-size:1.2rem;}
+    .callout-box{font-size:.9rem; padding:15px 16px; margin:18px auto;}
+    .callout-box.quote{font-size:.95rem;}
+    .callout-box.q3{font-size:1rem; line-height:1.9;}
+    .callout-box.mini{font-size:.88rem;}
+    .checks .c{font-size:.82rem; padding:8px 13px;}
+    .concept-block{padding:20px 18px 4px; margin-top:20px;}
+    .cb-num{font-size:1.25rem;}
+    .cb-title h3{font-size:1.06rem;}
+    .cb-title p{font-size:.9rem;}
+    .acc .q .qt{font-size:.98rem;}
+    .acc .a .inner{font-size:.92rem;}
+    .acc .q{padding:18px 2px;}
+    .pin-btn{padding:13px 15px; gap:10px;}
+    .pin-btn .pin-txt b{font-size:.93rem;}
+    .pin-btn .pin-sub{font-size:.8rem;}
+    .card h3{font-size:1.02rem;} .card p{font-size:.9rem;}
+    .flow .f{font-size:.86rem; padding:12px 14px;}
+    .fg-label{font-size:1rem;} .fg-help{font-size:.88rem;}
+    .how{font-size:.9rem;} .how .steps span{font-size:.88rem;}
+    .price .row{font-size:.92rem;}
+    .note{font-size:.88rem;} .clicknote{font-size:.88rem;}
+  }
 </style>
 </head>
 <body>
