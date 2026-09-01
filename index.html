@@ -605,7 +605,7 @@
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   const app = initializeApp({ apiKey:"AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM", authDomain:"subin-routine.firebaseapp.com", projectId:"subin-routine" });
   const db = getFirestore(app);
-  const COLLECTION = "maydly_inquiries"; // 실가동 문의함 (진짜 문의 저장)
+  const COLLECTION = "maydly_inquiries_test"; // 기존 문의 누적 컬렉션(옛 라이브와 동일) — 260829 복귀
   window.saveInquiry = function(name, keep, instaHandle){
     return addDoc(collection(db, COLLECTION), {
         name: name||"", keep: keep||"", insta: instaHandle||"",
