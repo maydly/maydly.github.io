@@ -638,6 +638,9 @@
   ];
   var els   = SECTIONS.map(function(s){ return document.getElementById(s[0]); });
   var secs  = {};      // 섹션 → 머문 초
+  var back  = {};      // 섹션 → 지나갔다가 '다시' 들어온 횟수 (어렵거나 중요했다는 신호)
+  var seen  = {};      // 이미 한 번 본 섹션
+  var last  = -1;      // 직전에 보던 섹션
   var deep  = -1;      // 도달한 가장 아래 섹션
   var opened= [];      // 펼쳐본 항목
   var form  = 'none';  // none → reached → typed → submitted
@@ -660,7 +663,14 @@
     if(document.hidden) return;              // 다른 탭·앱에 가 있으면 세지 않는다
     var i = current(); if(i < 0) return;
     alive++;
-    secs[SECTIONS[i][0]] = (secs[SECTIONS[i][0]] || 0) + 1;
+    var sid = SECTIONS[i][0];
+    secs[sid] = (secs[sid] || 0) + 1;
+    /* 다른 대목을 보다가 '이미 봤던' 대목으로 돌아오면 되돌아봄으로 센다 */
+    if(i !== last){
+      if(seen[sid]) back[sid] = (back[sid] || 0) + 1;
+      seen[sid] = 1;
+      last = i;
+    }
     if(i > deep){
       deep = i;
       if(SECTIONS[i][0] === 'cta' && form === 'none') form = 'reached';
@@ -701,8 +711,9 @@
       localStorage.setItem('mv_visits', String(visit));
     }catch(e){}
 
-    var secFields = {};
-    for(var k in secs){ if(secs.hasOwnProperty(k)) secFields[k] = { integerValue: String(secs[k]) }; }
+    var secFields = {}, backFields = {};
+    for(var k in secs){ if(secs.hasOwnProperty(k)) secFields[k]  = { integerValue: String(secs[k]) }; }
+    for(var k2 in back){ if(back.hasOwnProperty(k2)) backFields[k2] = { integerValue: String(back[k2]) }; }
 
     var body = { fields: {
       v:        { integerValue: '1' },
@@ -711,6 +722,7 @@
       deep:     { integerValue: String(Math.max(deep, 0)) },
       deepName: { stringValue: (SECTIONS[Math.max(deep,0)] || ['','?'])[1] },
       secs:     { mapValue: { fields: secFields } },
+      back:     { mapValue: { fields: backFields } },
       opened:   { arrayValue: { values: opened.slice(0,20).map(function(t){ return { stringValue: t }; }) } },
       form:     { stringValue: form },
       dev:      { stringValue: matchMedia('(max-width:820px)').matches ? 'mobile' : 'desktop' },
