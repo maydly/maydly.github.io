@@ -625,6 +625,7 @@
      ⚠️ 개인을 식별하지 않는다. 이름·연락처·IP·유입경로·기기 정보를 담지 않는다.
         담는 것: 머문 시간 · 도달 깊이 · 펼친 항목 · 문의폼 진행 단계 · 폰/PC · 방문 횟수
 
+     붙이는 곳: index.html 아무 곳(스크립트 블록). Firebase SDK 에 기대지 않는다.
      ──────────────────────────────────────────────────────────────── */
   (function(){
     var SECTIONS = [
@@ -682,6 +683,13 @@
       window.saveInquiry = function(){ form = 'submitted'; return _save.apply(this, arguments); };
     }
 
+    /* 저장 — Firestore SDK 대신 REST + keepalive 로 보낸다.
+       떠나는 순간 SDK 쓰기는 브라우저가 연결을 끊어 자주 유실된다.
+       keepalive 는 페이지가 닫혀도 전송을 끝까지 보장한다. */
+    var VIEWS_URL = "https://firestore.googleapis.com/v1/projects/subin-routine"
+                  + "/databases/(default)/documents/maydly_views"
+                  + "?key=AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM";
+
     function send(){
       if(sent || alive < 5) return;            // 5초도 안 머문 건 버린다(봇·오클릭)
       sent = true;
@@ -690,19 +698,32 @@
         visit = (parseInt(localStorage.getItem('mv_visits')||'0',10) || 0) + 1;
         localStorage.setItem('mv_visits', String(visit));
       }catch(e){}
-      addDoc(collection(db,'maydly_views'), {
-        v: 1,
-        ts: serverTimestamp(),
-        dur: Math.min(alive, 86400),
-        deep: Math.max(deep, 0),
-        deepName: (SECTIONS[Math.max(deep,0)] || ['','?'])[1],
-        secs: secs,
-        opened: opened.slice(0,20),
-        form: form,
-        dev: matchMedia('(max-width:820px)').matches ? 'mobile' : 'desktop',
-        visit: Math.min(visit, 999)
-      }).catch(function(){});
+
+      var secFields = {};
+      for(var k in secs){ if(secs.hasOwnProperty(k)) secFields[k] = { integerValue: String(secs[k]) }; }
+
+      var body = { fields: {
+        v:        { integerValue: '1' },
+        ts:       { timestampValue: new Date().toISOString().replace(/\.\d+Z$/, 'Z') },
+        dur:      { integerValue: String(Math.min(alive, 86400)) },
+        deep:     { integerValue: String(Math.max(deep, 0)) },
+        deepName: { stringValue: (SECTIONS[Math.max(deep,0)] || ['','?'])[1] },
+        secs:     { mapValue: { fields: secFields } },
+        opened:   { arrayValue: { values: opened.slice(0,20).map(function(t){ return { stringValue: t }; }) } },
+        form:     { stringValue: form },
+        dev:      { stringValue: matchMedia('(max-width:820px)').matches ? 'mobile' : 'desktop' },
+        visit:    { integerValue: String(Math.min(visit, 999)) }
+      }};
+
+      try{
+        fetch(VIEWS_URL, {
+          method: 'POST', keepalive: true, mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }).catch(function(){});
+      }catch(e){}
     }
+
     /* 폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. 둘 다 건다. */
     addEventListener('pagehide', send);
     document.addEventListener('visibilitychange', function(){ if(document.hidden) send(); });
