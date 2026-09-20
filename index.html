@@ -614,6 +614,100 @@
         status: "신규", source: "maydly_form", ts: serverTimestamp()
       }).catch(function(){ /* 저장 실패해도 카카오 복사는 진행 */ });
   };
+
+  /* ────────────────────────────────────────────────────────────────
+     시안 페이지 조회 집계 (익명)  ·  기능-001 파생  ·  260920
+
+     왜 만드나: 어느 대목을 많이 보고, 어디를 건너뛰고, 어디서 오래 머물고,
+               어디서 멈추는지를 알아 페이지를 고치기 위해서다.
+               개별 고객을 들여다보려는 것이 아니다.
+
+     ⚠️ 개인을 식별하지 않는다. 이름·연락처·IP·유입경로·기기 정보를 담지 않는다.
+        담는 것: 머문 시간 · 도달 깊이 · 펼친 항목 · 문의폼 진행 단계 · 폰/PC · 방문 횟수
+
+     ──────────────────────────────────────────────────────────────── */
+  (function(){
+    var SECTIONS = [
+      ['direction','촬영 방향'], ['core','핵심 안내'],   ['concept','시안 방향'],
+      ['structure','촬영 구성'], ['guide','준비 참고'],  ['behind','비하인드'],
+      ['process','진행 흐름'],   ['studio','촬영 공간'], ['notice','필독 공지'],
+      ['cta','문의하기']
+    ];
+    var els   = SECTIONS.map(function(s){ return document.getElementById(s[0]); });
+    var secs  = {};      // 섹션 → 머문 초
+    var deep  = -1;      // 도달한 가장 아래 섹션
+    var opened= [];      // 펼쳐본 항목
+    var form  = 'none';  // none → reached → typed → submitted
+    var alive = 0, sent = false;
+
+    /* 화면 한가운데에 걸린 섹션을 '지금 보는 곳'으로 본다 */
+    function current(){
+      var mid = innerHeight/2, best = -1, bestD = 1e9;
+      for(var i=0;i<els.length;i++){
+        var el = els[i]; if(!el) continue;
+        var r = el.getBoundingClientRect();
+        if(r.bottom < 0 || r.top > innerHeight) continue;
+        var d = Math.abs((r.top + r.bottom)/2 - mid);
+        if(d < bestD){ bestD = d; best = i; }
+      }
+      return best;
+    }
+
+    setInterval(function(){
+      if(document.hidden) return;              // 다른 탭·앱에 가 있으면 세지 않는다
+      var i = current(); if(i < 0) return;
+      alive++;
+      secs[SECTIONS[i][0]] = (secs[SECTIONS[i][0]] || 0) + 1;
+      if(i > deep){
+        deep = i;
+        if(SECTIONS[i][0] === 'cta' && form === 'none') form = 'reached';
+      }
+    }, 1000);
+
+    /* 펼쳐본 항목 */
+    Array.prototype.forEach.call(document.querySelectorAll('.acc .q'), function(q){
+      q.addEventListener('click', function(){
+        var t = (q.textContent||'').replace(/눌러서 자세히 보기|자세히 보기|\+/g,'');
+        t = t.replace(/\s+/g,' ').trim().slice(0,30);
+        if(t && opened.indexOf(t) < 0) opened.push(t);
+      });
+    });
+
+    /* 문의폼 — 도달했나 / 쓰다 말았나 / 냈나 */
+    Array.prototype.forEach.call(document.querySelectorAll('#cta input, #cta textarea'), function(el){
+      el.addEventListener('input', function(){ if(form !== 'submitted') form = 'typed'; }, { once:true });
+    });
+    var _save = window.saveInquiry;
+    if(typeof _save === 'function'){
+      window.saveInquiry = function(){ form = 'submitted'; return _save.apply(this, arguments); };
+    }
+
+    function send(){
+      if(sent || alive < 5) return;            // 5초도 안 머문 건 버린다(봇·오클릭)
+      sent = true;
+      var visit = 1;
+      try{
+        visit = (parseInt(localStorage.getItem('mv_visits')||'0',10) || 0) + 1;
+        localStorage.setItem('mv_visits', String(visit));
+      }catch(e){}
+      addDoc(collection(db,'maydly_views'), {
+        v: 1,
+        ts: serverTimestamp(),
+        dur: Math.min(alive, 86400),
+        deep: Math.max(deep, 0),
+        deepName: (SECTIONS[Math.max(deep,0)] || ['','?'])[1],
+        secs: secs,
+        opened: opened.slice(0,20),
+        form: form,
+        dev: matchMedia('(max-width:820px)').matches ? 'mobile' : 'desktop',
+        visit: Math.min(visit, 999)
+      }).catch(function(){});
+    }
+    /* 폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. 둘 다 건다. */
+    addEventListener('pagehide', send);
+    document.addEventListener('visibilitychange', function(){ if(document.hidden) send(); });
+  })();
+
 </script>
 </body>
 </html>
