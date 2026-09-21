@@ -646,6 +646,30 @@
   var form  = 'none';  // none → reached → typed → submitted
   var alive = 0, sent = false;
 
+  /* 점검 모드 — 주소에 ?trackdebug=1 을 붙이면 화면 오른쪽 아래에 상태가 보인다.
+     평소에는 아무것도 만들지 않는다. */
+  var DBG = location.search.indexOf('trackdebug=1') >= 0, dbgEl = null;
+  function dbg(msg){
+    if(!DBG) return;
+    if(!dbgEl){
+      dbgEl = document.createElement('div');
+      dbgEl.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:99999;max-width:300px;'
+        + 'background:#2A3820;color:#EAF2DC;font:12px/1.6 -apple-system,system-ui,sans-serif;'
+        + 'padding:12px 14px;border-radius:12px;white-space:pre-wrap;box-shadow:0 6px 20px rgba(0,0,0,.3)';
+      document.body.appendChild(dbgEl);
+    }
+    dbgEl.textContent = msg;
+  }
+  if(DBG){
+    setInterval(function(){
+      if(sent) return;
+      dbg('[조회 기록 점검]\n머문 시간 ' + alive + '초  (5초 넘어야 보냄)\n'
+        + '도달 ' + (deep < 0 ? '아직' : SECTIONS[deep][1]) + '\n'
+        + '펼친 항목 ' + opened.length + '개\n'
+        + '\n탭을 닫거나 다른 탭으로 옮기면 보냅니다');
+    }, 500);
+  }
+
   /* 화면 한가운데에 걸린 섹션을 '지금 보는 곳'으로 본다 */
   function current(){
     var mid = innerHeight/2, best = -1, bestD = 1e9;
@@ -730,15 +754,32 @@
     }};
 
     try{
+      dbg('[조회 기록] 보내는 중… ' + alive + '초');
       fetch(VIEWS_URL, {
         method: 'POST', keepalive: true, mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      }).catch(function(){});
+      }).then(function(res){
+        if(!DBG) return;
+        res.text().then(function(t){
+          dbg(res.ok ? '[조회 기록] ✅ 저장됨 (' + alive + '초)'
+                     : '[조회 기록] ❌ 거부 ' + res.status + '\n' + t.slice(0,220));
+        });
+      }).catch(function(e){ dbg('[조회 기록] ❌ 전송 실패\n' + e); });
     }catch(e){}
   }
 
   /* 폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. 둘 다 건다. */
+  if(DBG){
+    var btn = document.createElement('button');
+    btn.textContent = '지금 보내보기';
+    btn.style.cssText = 'position:fixed;right:10px;bottom:120px;z-index:99999;padding:10px 16px;'
+      + 'border:0;border-radius:10px;background:#4A7A35;color:#fff;font-size:13px;font-weight:700;cursor:pointer';
+    btn.onclick = function(){ if(alive < 5){ alive = 5; } send(); };
+    document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(btn); });
+    if(document.readyState !== 'loading') document.body.appendChild(btn);
+  }
+
   addEventListener('pagehide', send);
   document.addEventListener('visibilitychange', function(){ if(document.hidden) send(); });
 })();
