@@ -619,6 +619,7 @@
 <script>
 /* ────────────────────────────────────────────────────────────────
    시안 페이지 조회 집계 (익명)  ·  기능-001 파생  ·  260920
+   260923 개정 — 밖으로 나갔다 돌아오는 것을 기록하게 고침
 
    왜 만드나: 어느 대목을 많이 보고, 어디를 건너뛰고, 어디서 오래 머물고,
              어디서 멈추는지를 알아 페이지를 고치기 위해서다.
@@ -626,6 +627,21 @@
 
    ⚠️ 개인을 식별하지 않는다. 이름·연락처·IP·유입경로·기기 정보를 담지 않는다.
       담는 것: 머문 시간 · 도달 깊이 · 펼친 항목 · 문의폼 진행 단계 · 폰/PC · 방문 횟수
+             · 밖에 나간 대목 / 나간 횟수 / 돌아온 횟수 / 나가 있던 시간
+
+   ───── 260923에 무엇이 틀렸고 어떻게 고쳤나 ─────
+   옛 코드는 탭을 한 번 벗어나면 `sent = true` 로 그 방문을 «끝»내버렸다.
+   그런데 시안 방향에는 핀터레스트 시안 링크가 있어 고객이 «나갔다 돌아와서»
+   마저 읽는다. 그래서 나간 뒤의 시간이 통째로 버려졌고,
+   시안 방향이 실제보다 훨씬 덜 읽힌 것처럼 집계됐다.
+
+   고친 방식: 한 방문을 여러 «조각»으로 나눠 보낸다.
+     - sid  : 같은 방문끼리 묶는 열쇠 (개인 식별용이 아니다. 새로고침하면 새 sid)
+     - seq  : 몇 번째 조각인가. 화면에서는 sid 별로 seq 가 가장 큰 것만 쓴다
+     - left : 어느 대목에서 밖으로 나갔나 (여기서 핀터레스트로 나가는 게 보인다)
+     - outs / rets : 나간 횟수 / 돌아온 횟수
+     - away : 밖에 나가 있던 총 시간(초). 머문 시간(dur)에는 포함하지 않는다
+   돌아오지 않을 수도 있으므로 «나갈 때마다» 한 조각을 보내둔다.
 
    붙이는 곳: index.html 아무 곳(스크립트 블록). Firebase SDK 에 기대지 않는다.
    ──────────────────────────────────────────────────────────────── */
@@ -639,12 +655,23 @@
   var els   = SECTIONS.map(function(s){ return document.getElementById(s[0]); });
   var secs  = {};      // 섹션 → 머문 초
   var back  = {};      // 섹션 → 지나갔다가 '다시' 들어온 횟수 (어렵거나 중요했다는 신호)
+  var left  = {};      // 섹션 → 여기서 «밖으로» 나간 횟수 (링크 타고 나감)
   var seen  = {};      // 이미 한 번 본 섹션
   var last  = -1;      // 직전에 보던 섹션
   var deep  = -1;      // 도달한 가장 아래 섹션
   var opened= [];      // 펼쳐본 항목
   var form  = 'none';  // none → reached → typed → submitted
-  var alive = 0, sent = false;
+  var alive = 0;
+
+  /* 한 방문을 여러 조각으로 나눠 보내기 위한 것들 */
+  var SID  = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  var seq  = 0;        // 보낸 조각 수
+  var outs = 0;        // 밖으로 나간 횟수
+  var rets = 0;        // 돌아온 횟수
+  var away = 0;        // 밖에 나가 있던 총 초
+  var awayFrom = 0;    // 나간 시각
+  var lastSentAlive = -1;   // 직전에 보낼 때의 머문 시간 — 새 내용이 있을 때만 다시 보낸다
+  var MAX_SEQ = 30;         // 조각 상한 (보안규칙도 30으로 막아둠)
 
   /* 점검 모드 — 주소에 ?trackdebug=1 을 붙이면 화면 오른쪽 아래에 상태가 보인다.
      평소에는 아무것도 만들지 않는다. */
@@ -662,10 +689,11 @@
   }
   if(DBG){
     setInterval(function(){
-      if(sent) return;
       dbg('[조회 기록 점검]\n머문 시간 ' + alive + '초  (5초 넘어야 보냄)\n'
         + '도달 ' + (deep < 0 ? '아직' : SECTIONS[deep][1]) + '\n'
         + '펼친 항목 ' + opened.length + '개\n'
+        + '밖에 나갔다 옴 ' + outs + '번 (돌아옴 ' + rets + '번, 나가 있던 ' + away + '초)\n'
+        + '보낸 조각 ' + seq + '개\n'
         + '\n탭을 닫거나 다른 탭으로 옮기면 보냅니다');
     }, 500);
   }
@@ -726,18 +754,31 @@
                 + "/databases/(default)/documents/maydly_views"
                 + "?key=AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM";
 
+  function imap(o){                          // {a:1} → Firestore 맵 형식
+    var f = {};
+    for(var k in o){ if(o.hasOwnProperty(k)) f[k] = { integerValue: String(o[k]) }; }
+    return { mapValue: { fields: f } };
+  }
+
   function send(){
-    if(sent || alive < 5) return;            // 5초도 안 머문 건 버린다(봇·오클릭)
-    sent = true;
+    if(alive < 5) return;                    // 5초도 안 머문 건 버린다(봇·오클릭)
+    if(seq >= MAX_SEQ) return;               // 조각 상한
+    if(alive <= lastSentAlive) return;       // 지난번 이후 새로 본 게 없으면 안 보낸다
+    lastSentAlive = alive;
+    seq++;
+
     var visit = 1;
     try{
-      visit = (parseInt(localStorage.getItem('mv_visits')||'0',10) || 0) + 1;
-      localStorage.setItem('mv_visits', String(visit));
+      /* 방문 횟수는 조각마다 올리면 안 된다. 이 방문에서 한 번만 올린다. */
+      var key = 'mv_visits', mark = 'mv_sid';
+      if(localStorage.getItem(mark) !== SID){
+        visit = (parseInt(localStorage.getItem(key)||'0',10) || 0) + 1;
+        localStorage.setItem(key, String(visit));
+        localStorage.setItem(mark, SID);
+      }else{
+        visit = parseInt(localStorage.getItem(key)||'1',10) || 1;
+      }
     }catch(e){}
-
-    var secFields = {}, backFields = {};
-    for(var k in secs){ if(secs.hasOwnProperty(k)) secFields[k]  = { integerValue: String(secs[k]) }; }
-    for(var k2 in back){ if(back.hasOwnProperty(k2)) backFields[k2] = { integerValue: String(back[k2]) }; }
 
     var body = { fields: {
       v:        { integerValue: '1' },
@@ -745,16 +786,22 @@
       dur:      { integerValue: String(Math.min(alive, 86400)) },
       deep:     { integerValue: String(Math.max(deep, 0)) },
       deepName: { stringValue: (SECTIONS[Math.max(deep,0)] || ['','?'])[1] },
-      secs:     { mapValue: { fields: secFields } },
-      back:     { mapValue: { fields: backFields } },
+      secs:     imap(secs),
+      back:     imap(back),
+      left:     imap(left),
       opened:   { arrayValue: { values: opened.slice(0,20).map(function(t){ return { stringValue: t }; }) } },
       form:     { stringValue: form },
       dev:      { stringValue: matchMedia('(max-width:820px)').matches ? 'mobile' : 'desktop' },
-      visit:    { integerValue: String(Math.min(visit, 999)) }
+      visit:    { integerValue: String(Math.min(visit, 999)) },
+      sid:      { stringValue: SID },
+      seq:      { integerValue: String(seq) },
+      outs:     { integerValue: String(Math.min(outs, 50)) },
+      rets:     { integerValue: String(Math.min(rets, 50)) },
+      away:     { integerValue: String(Math.min(away, 86400)) }
     }};
 
     try{
-      dbg('[조회 기록] 보내는 중… ' + alive + '초');
+      dbg('[조회 기록] 보내는 중… ' + alive + '초 (조각 ' + seq + ')');
       fetch(VIEWS_URL, {
         method: 'POST', keepalive: true, mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
@@ -762,26 +809,42 @@
       }).then(function(res){
         if(!DBG) return;
         res.text().then(function(t){
-          dbg(res.ok ? '[조회 기록] ✅ 저장됨 (' + alive + '초)'
+          dbg(res.ok ? '[조회 기록] ✅ 저장됨 조각 ' + seq + ' (' + alive + '초)'
                      : '[조회 기록] ❌ 거부 ' + res.status + '\n' + t.slice(0,220));
         });
       }).catch(function(e){ dbg('[조회 기록] ❌ 전송 실패\n' + e); });
     }catch(e){}
   }
 
-  /* 폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. 둘 다 건다. */
+  /* 점검 모드 버튼 */
   if(DBG){
     var btn = document.createElement('button');
     btn.textContent = '지금 보내보기';
-    btn.style.cssText = 'position:fixed;right:10px;bottom:120px;z-index:99999;padding:10px 16px;'
+    btn.style.cssText = 'position:fixed;right:10px;bottom:150px;z-index:99999;padding:10px 16px;'
       + 'border:0;border-radius:10px;background:#4A7A35;color:#fff;font-size:13px;font-weight:700;cursor:pointer';
-    btn.onclick = function(){ if(alive < 5){ alive = 5; } send(); };
+    btn.onclick = function(){ if(alive < 5){ alive = 5; } lastSentAlive = -1; send(); };
     document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(btn); });
     if(document.readyState !== 'loading') document.body.appendChild(btn);
   }
 
+  /* 밖으로 나갈 때 / 돌아올 때.
+     폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. pagehide 와 둘 다 건다. */
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      var i = current();                     // 어느 대목에서 나갔나 — 핀터레스트 링크 위치가 여기서 보인다
+      if(i >= 0){ var k = SECTIONS[i][0]; left[k] = (left[k] || 0) + 1; }
+      outs++;
+      awayFrom = Date.now();
+      send();                                // 돌아오지 않을 수도 있으니 조각을 하나 남긴다
+    }else{
+      if(awayFrom){
+        away += Math.min(Math.round((Date.now() - awayFrom)/1000), 86400);
+        awayFrom = 0;
+        rets++;                              // 실제로 돌아왔다
+      }
+    }
+  });
   addEventListener('pagehide', send);
-  document.addEventListener('visibilitychange', function(){ if(document.hidden) send(); });
 })();
 </script>
 </body>
