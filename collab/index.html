@@ -313,6 +313,109 @@
     font-size: 21px; color: var(--accent); display: block; margin-bottom: 7px;
   }
 
+
+  /* ─────────── 필독 공지 링크 ─────────── */
+  .notice-link {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+    padding: 24px 22px; margin-top: 18px; cursor: pointer; text-decoration: none;
+    transition: transform .5s var(--ease), box-shadow .5s var(--ease), background .4s var(--ease);
+  }
+  .notice-link:hover { transform: translateY(-3px); box-shadow: 0 10px 28px -18px rgba(42,56,32,.45); background: var(--card); }
+  .notice-link .nl-label {
+    display: block; font-family: 'Playfair Display', serif; font-size: 10px;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--gray); margin-bottom: 6px;
+  }
+  .notice-link .nl-title { font-size: 16px; font-weight: 600; color: var(--accent); }
+  .notice-link .nl-arrow { font-size: 18px; color: var(--green-lt); transition: transform .4s var(--ease); }
+  .notice-link:hover .nl-arrow { transform: translateX(4px); }
+
+  /* ─────────── 공지 모달 ─────────── */
+  #noticeToggle { display: none; }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(42,56,32,.4); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  #noticeToggle:checked ~ .modal-overlay { display: block; }
+  body:has(#noticeToggle:checked) { overflow: hidden; }
+  .modal-box {
+    background: var(--cream); max-width: 720px; margin: 0 auto; min-height: 100vh;
+    animation: modalUp .5s var(--ease);
+  }
+  @keyframes modalUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  .modal-header {
+    position: sticky; top: 0; z-index: 3;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    background: var(--cream); border-bottom: 1px solid var(--line); padding: 22px;
+  }
+  .modal-badge {
+    display: block; font-size: 11px; letter-spacing: 1px; color: var(--green);
+    font-weight: 600; margin-bottom: 4px;
+  }
+  .modal-title { font-size: 18px; font-weight: 600; letter-spacing: -.3px; }
+  .modal-close {
+    width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--gray); cursor: pointer;
+    transition: background .4s var(--ease), color .4s var(--ease);
+  }
+  .modal-close:hover { background: var(--card); color: var(--accent); }
+  .modal-sec { padding: 30px 22px; border-bottom: 1px solid var(--line); }
+  .modal-sec:nth-child(even) { background: var(--white); }
+  .modal-sec-num {
+    font-family: 'Playfair Display', serif; font-size: 26px; color: var(--line); line-height: 1;
+  }
+  .modal-sec-label {
+    font-family: 'Playfair Display', serif; font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gray); margin: 6px 0 8px;
+  }
+  .modal-sec-title { font-size: 17px; font-weight: 600; margin-bottom: 14px; letter-spacing: -.3px; }
+  .modal-text { font-size: 14.5px; line-height: 1.85; }
+  .modal-text strong { font-weight: 600; color: var(--accent); }
+  .modal-hl {
+    background: var(--card); border-radius: 8px; padding: 18px 18px;
+    font-size: 14.5px; line-height: 1.8; margin: 14px 0;
+  }
+  .modal-hl strong { font-weight: 600; color: var(--accent); }
+  .modal-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .modal-tag {
+    font-family: 'Playfair Display', serif; font-size: 11px; letter-spacing: 1px;
+    border: 1px solid var(--line); border-radius: 30px; padding: 5px 14px; color: var(--gray);
+  }
+  .modal-rule {
+    background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+    padding: 16px 18px; margin-top: 12px;
+  }
+  .modal-sec:nth-child(even) .modal-rule { background: var(--cream); }
+  .modal-rule-head { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+  .modal-rule-body { font-size: 14px; line-height: 1.8; color: var(--black); }
+  .modal-rule-body strong { font-weight: 600; color: var(--accent); }
+  .modal-dot-item {
+    position: relative; padding: 12px 0 12px 17px;
+    border-bottom: 1px dashed var(--line); font-size: 14px; line-height: 1.75;
+  }
+  .modal-dot-item:last-child { border-bottom: 0; }
+  .modal-dot-item::before {
+    content: ''; position: absolute; left: 0; top: 21px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green-lt);
+  }
+  .modal-dot-item strong { font-weight: 600; color: var(--accent); }
+  .modal-note {
+    background: var(--card); border-radius: 8px; padding: 14px 16px; margin-top: 14px;
+    font-size: 13.5px; line-height: 1.75; color: var(--accent);
+  }
+  .modal-foot { text-align: center; padding: 40px 22px 54px; }
+  .modal-foot .fname {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 19px; color: var(--accent); display: block; margin-bottom: 6px;
+  }
+  .modal-foot .fhandle { font-size: 12px; letter-spacing: 1px; color: var(--gray); }
+
+  @media (max-width: 560px) {
+    .notice-link .nl-title { font-size: 15px; }
+  }
+
   @media (max-width: 560px) {
     .duo { grid-template-columns: 1fr; }
     h1 { font-size: 24px; }
@@ -428,7 +531,25 @@
 
   <!-- 03 -->
   <section class="rv">
-    <div class="sec-head"><span class="sec-num">03</span><span class="sec-label">Reply</span></div>
+    <div class="sec-head"><span class="sec-num">03</span><span class="sec-label">Notice</span></div>
+    <div class="sec-bar"></div>
+    <h2>필독 공지사항</h2>
+    <p>촬영은 <span class="em">상호간의 준비와 책임</span>을 기반으로 동일한 기준과 흐름 안에서 진행돼요.
+    아래 공지는 한 번만 확인해주시면 됩니다.</p>
+
+    <label class="notice-link" for="noticeToggle">
+      <span>
+        <span class="nl-label">Project Notice</span>
+        <span class="nl-title">필독 공지사항 확인하기</span>
+      </span>
+      <span class="nl-arrow">→</span>
+    </label>
+    <p class="quiet" style="margin-top:15px">진행 의사를 보내주시면 위 안내를 확인하고 동의해주신 것으로 보고 촬영 준비를 시작합니다.</p>
+  </section>
+
+  <!-- 04 -->
+  <section class="rv">
+    <div class="sec-head"><span class="sec-num">04</span><span class="sec-label">Reply</span></div>
     <div class="sec-bar"></div>
     <h2>답 주실 때 알려주시면 좋은 것</h2>
     <p>아래 내용을 같이 주시면 방향을 빠르게 잡을 수 있어요. 형식 없이 편하게 적어주셔도 괜찮습니다.</p>
@@ -551,6 +672,137 @@
   onScroll();
 })();
 </script>
+
+<input type="checkbox" id="noticeToggle">
+<div class="modal-overlay">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <div>
+        <span class="modal-badge">❗ 필독 공지사항</span>
+        <span class="modal-title">프로젝트 공지사항</span>
+      </div>
+      <label class="modal-close" for="noticeToggle" aria-label="닫기">✕</label>
+    </div>
+
+    <div class="modal-sec">
+      <div class="modal-text">
+        촬영은 <strong>상호간의 준비와 책임</strong>을 기반으로
+        동일한 기준과 흐름 안에서 진행됩니다.<br>
+        완성도 높은 결과를 위해 아래 내용을 충분히 확인 후 진행 부탁드립니다.
+      </div>
+    </div>
+
+    <!-- 01 저작권 -->
+    <div class="modal-sec">
+      <div class="modal-sec-num">01</div>
+      <div class="modal-sec-label">Copyright · 저작권</div>
+      <h3 class="modal-sec-title">사진 활용 및 저작권에 대하여</h3>
+      <div class="modal-text">
+        촬영을 통해 제작된 사진은 모델과 작가 양측 모두
+        포트폴리오 및 홍보 목적으로 <strong>자유롭게 활용</strong>하실 수 있습니다.
+      </div>
+      <div class="modal-tags">
+        <span class="modal-tag">Instagram</span>
+        <span class="modal-tag">Blog</span>
+        <span class="modal-tag">YouTube</span>
+        <span class="modal-tag">SNS</span>
+      </div>
+      <div class="modal-hl">
+        촬영 현장에서 편하게 모든 것을 촬영하셔도 괜찮아요 🙂<br><br>
+        다만 인스타그램에 업로드하실 때는 출처 표기로<br>
+        <strong>사진 태그 + @maydly_u 태그</strong>를 함께 부탁드립니다.
+      </div>
+      <div class="modal-text" style="font-size:13px; color:var(--gray); margin-top:12px">
+        그 외의 사용에 대한 책임은 사용자에게 있어요.<br>
+        특정 용도로 활용을 제한하고 싶으시거나 별도 요청이 있으시면 사전에 말씀해 주세요.
+      </div>
+    </div>
+
+    <!-- 02 결과물 -->
+    <div class="modal-sec">
+      <div class="modal-sec-num">02</div>
+      <div class="modal-sec-label">Delivery · 결과물 안내</div>
+      <h3 class="modal-sec-title">촬영물 전달 및 기준 안내</h3>
+      <div class="modal-text">
+        촬영 후 결과물은 <strong>카카오톡 채널</strong>을 통해 전달되며,
+        작가와 함께 셀렉한 사진을 기준으로 보정 작업이 진행됩니다.<br><br>
+        <strong>1컨셉 기준 5장, 총 2컨셉 촬영 → 10장</strong>의 사진이 기본 제공됩니다.<br>
+        이때 고르시는 10장은 원하시는 사진을 먼저 받아보실 수 있도록 전달드리는 방식이에요.<br>
+        보정 작업 후 <strong>한 달 이내 JPG 파일</strong>로 전달됩니다.<br>
+        가공되지 않은 <strong>원본(RAW)은 제공되지 않으며</strong>, 전체 셀렉 원본 JPG가 필요하신 경우 별도 요청을 통해 제공됩니다.<br>
+        기본 전달본은 <strong>Maydly 브랜드 표기본</strong>이며, 무표기본이 필요하신 경우 별도 요청으로 제공됩니다.
+      </div>
+      <div class="modal-rule">
+        <div class="modal-rule-head">Additional Request · 별도 요청</div>
+        <div class="modal-rule-body">
+          전체 셀렉 원본 JPG · 전체 셀렉 JPG 색보정본 · 추가 디테일 보정 · 워터마크 제거는
+          <strong>별도 요청</strong>으로 진행됩니다. 필요하시면 말씀해주시면 따로 안내드릴게요.
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 변경 및 취소 -->
+    <div class="modal-sec">
+      <div class="modal-sec-num">03</div>
+      <div class="modal-sec-label">Policy · 변경 및 취소</div>
+      <h3 class="modal-sec-title">변경 및 취소 규정</h3>
+      <div class="modal-text">
+        일정이 확정되면 촬영 장소 섭외와 촬영 준비가 해당 날짜를 기준으로 진행됩니다.<br>
+        그래서 확정 이후의 변경·취소는 아래 기준에 따라 적용됩니다.
+      </div>
+      <div class="modal-rule">
+        <div class="modal-rule-head">🗓 일정 취소</div>
+        <div class="modal-rule-body">
+          <strong>촬영일 15일 전까지</strong> → 취소 가능<br>
+          <strong>14일 전부터</strong> → 장소·준비 일정 확정으로 취소 어려움
+        </div>
+      </div>
+      <div class="modal-rule">
+        <div class="modal-rule-head">🔁 일정 변경</div>
+        <div class="modal-rule-body">
+          <strong>촬영일 14일 전까지</strong> 1회 변경 가능<br>
+          14일 이내 → 장소·준비 확정으로 변경 불가
+        </div>
+      </div>
+      <div class="modal-rule">
+        <div class="modal-rule-head">☔ 기상 상황</div>
+        <div class="modal-rule-body">
+          일반적인 기상 상황에서는 촬영이 정상 진행되며,
+          촬영이 어려운 경우에 한해 일정이 조정됩니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 준비 기준 -->
+    <div class="modal-sec">
+      <div class="modal-sec-num">04</div>
+      <div class="modal-sec-label">Standard · 준비 기준 및 진행</div>
+      <h3 class="modal-sec-title">준비 기준 및 진행이 어려운 경우</h3>
+      <div class="modal-text">
+        이 촬영은 모델님과 함께 준비해가는 방식이라,<br>
+        확정 후 사전 준비와 소통이 결과물에 중요한 영향을 줍니다.
+      </div>
+      <div class="modal-hl">
+        사전 준비 및 전달 기한은 촬영일 기준 <strong>5일 전까지</strong>입니다.<br>
+        의상, 시안, 준비 내용이 기한 내 확인되어야<br>
+        촬영 방향을 미리 점검하고 필요한 준비를 진행할 수 있어요.
+      </div>
+      <div>
+        <div class="modal-dot-item">촬영일 5일 전까지 필요한 준비 내용이 확인되지 않거나, 일정 조율 / 시안 공유 / 기본적인 소통이 어려운 경우에는 정상 진행이 어려울 수 있습니다.</div>
+        <div class="modal-dot-item">단, 사전 준비 미확인으로 촬영 진행이 불가능한 경우에는 <strong>당일 취소와 동일한 기준</strong>이 적용됩니다.</div>
+        <div class="modal-dot-item">확정된 일정은 서로의 시간과 사전 준비를 약속한 일정이기 때문에 변경이나 취소가 필요한 경우 <strong>가능한 한 빠르게 말씀</strong> 부탁드립니다.</div>
+      </div>
+      <div class="modal-note">준비 미확인으로 촬영 진행이 어려운 경우에는 위 변경·취소 기준과 별도로 해당 기준이 적용됩니다.</div>
+    </div>
+
+    <div class="modal-foot">
+      <span class="fname">maydly</span>
+      <span class="fhandle">@maydly_u</span>
+    </div>
+
+  </div>
+</div>
 
 </body>
 </html>
