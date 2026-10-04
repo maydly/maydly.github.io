@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script id="mo-gate">
+/* maydly 시안 · 모션 게이트 (브랜드-008) — head 맨 앞에서 한 번만 돈다.
+   여기서 html.mo 를 붙여야만 «숨겼다가 보여주는» 연출이 켜진다.
+   켜지지 않는 경우(=원래 페이지 그대로 다 보임):
+     · IntersectionObserver 가 없는 옛 브라우저 → 원본 첫 스크립트가 예외로 죽지 않게 «빈 IO»만 깔아 둔다(펼침이 산다)
+     · 「동작 줄이기」 설정
+     · 개별 transform(translate)·:is() 를 모르는 옛 엔진(iOS 14.1 미만 등) → 깜빡임 없이 원래 페이지
+   안전 타이머: 화면이 처음 그려진 뒤 2.5초 안에 본 스크립트가 mo-ok 를 못 붙이면 html.mo 를 떼어 전부 보이게 한다.
+   (글꼴 CSS 가 늦게 오는 동안엔 화면 자체가 안 그려지므로, 그 시간까지 세면 멀쩡한 기기에서도 연출이 꺼진다)
+   10초 예비 타이머는 첫 그림조차 안 나오는 이상한 환경 대비. */
+(function (d, w) {
+  try {
+    var de = d.documentElement, mm = w.matchMedia;
+    if (typeof w.IntersectionObserver !== 'function') {
+      w.IntersectionObserver = function () {
+        return { observe: function () {}, unobserve: function () {}, disconnect: function () {}, takeRecords: function () { return []; } };
+      };
+      return;
+    }
+    if (!mm || mm('(prefers-reduced-motion: reduce)').matches) return;
+    if (!(w.CSS && w.CSS.supports && w.CSS.supports('translate', '0 1px'))) return;
+    de.classList.add('mo');
+    var off = function () { if (!de.classList.contains('mo-ok')) de.classList.remove('mo'); };
+    if (w.requestAnimationFrame) w.requestAnimationFrame(function () { w.__moFail = setTimeout(off, 2500); });
+    else w.__moFail = setTimeout(off, 2500);
+    w.__moFail2 = setTimeout(off, 10000);
+  } catch (e) {}
+})(document, window);
+</script>
+<title>maydly — 너를 담는 순간, 세상이 반하다</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f4ec; --panel:#efe9df; --green-wash:#e8f0e4;
+    --tx:#1d231b; --tx2:#586250; --tx3:#8b9182; --line:#e3ded1;
+    --accent:#3f7d57; --accentD:#356a4a; --gold:#a8894f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  html,body{overflow-x:hidden; max-width:100%;}
+  body{background:var(--bg); color:var(--tx); font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+    line-height:1.7; -webkit-font-smoothing:antialiased; letter-spacing:-.01em;}
+  a{color:inherit; text-decoration:none;}
+  .serif{font-family:'Noto Serif KR',serif; font-weight:500;}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 28px;}
+  .clv{display:inline-block; vertical-align:-2px;}
+  .reveal{opacity:0; transform:translateY(24px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1);}
+  .reveal.in{opacity:1; transform:none;}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
+
+  .nav{position:sticky; top:0; z-index:40; background:rgba(247,244,236,.72); backdrop-filter:saturate(180%) blur(16px); border-bottom:1px solid transparent; transition:.3s;}
+  .nav.scr{border-bottom-color:rgba(0,0,0,.07); background:rgba(247,244,236,.9);}
+  .nav .in{display:flex; align-items:center; justify-content:space-between; height:54px;}
+  .brand{font-size:1.2rem; font-weight:600; letter-spacing:-.02em; display:flex; align-items:center; gap:5px;}
+  .navlinks{display:flex; gap:24px; font-size:.82rem; color:var(--tx2); font-weight:500;}
+  .navlinks a:hover{color:var(--tx);}
+  .navcta{font-size:.82rem; color:#fff; background:var(--accent); padding:8px 16px; border-radius:980px; font-weight:600;}
+  .navcta:hover{background:var(--accentD);}
+  @media(max-width:820px){.navlinks{display:none;}}
+
+  .btn{display:inline-flex; align-items:center; gap:6px; font-weight:500; font-size:1rem; cursor:pointer; border-radius:980px; padding:13px 26px; border:1px solid transparent; transition:.2s;}
+  .btn.pri{background:var(--accent); color:#fff;} .btn.pri:hover{background:var(--accentD); transform:translateY(-1px);}
+  .link{color:var(--accentD); font-weight:500;} .link:hover{text-decoration:underline; text-underline-offset:3px;}
+  .link .ar{display:inline-block; transition:transform .2s;} .link:hover .ar{transform:translateX(3px);}
+  /* Pinterest 참고사진 버튼 */
+  .pin-btn{display:flex; align-items:center; gap:13px; margin-top:20px; padding:16px 20px; background:var(--accent); border:1.5px solid var(--accent); border-radius:14px; transition:.2s;}
+  .pin-btn:hover{background:var(--accentD); border-color:var(--accentD); transform:translateY(-1px); box-shadow:0 8px 22px rgba(63,125,87,.22);}
+  .pin-btn .pin-ic{font-size:1.4rem; flex:none;}
+  .pin-btn .pin-txt{display:flex; flex-direction:column; min-width:0;}
+  .pin-btn .pin-txt b{font-size:1.01rem; font-weight:700; color:#fff; letter-spacing:-.01em; line-height:1.35;}
+  .pin-btn .pin-sub{font-size:.9rem; color:rgba(255,255,255,.85); margin-top:3px;}
+
+  .hero{position:relative; text-align:center; padding:120px 28px 96px; background:radial-gradient(130% 100% at 50% -10%, var(--green-wash) 0%, var(--bg) 55%); overflow:hidden;}
+  .hero .eyebrow{font-size:.8rem; letter-spacing:.22em; color:var(--accentD); font-weight:600; text-transform:uppercase; margin-bottom:22px;}
+  .hero h1{font-size:clamp(2.3rem,6.6vw,3.9rem); font-weight:600; line-height:1.12; letter-spacing:-.03em;}
+  .hero h1 .em{color:var(--accentD);}
+  .hero .sub{font-size:clamp(1rem,2.3vw,1.22rem); color:var(--tx2); margin-top:22px;}
+  .hero .who{color:var(--tx3); margin-top:12px; font-size:.95rem; letter-spacing:.02em;}
+  .checks{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:34px auto 0; max-width:760px;}
+  .checks .c{background:#fff; border:1px solid var(--line); border-radius:980px; padding:9px 16px; font-size:.88rem; color:var(--tx2); display:flex; gap:7px; align-items:center;}
+  .checks .c:before{content:'✓'; color:var(--accent); font-weight:800;}
+  .cwm{position:absolute; pointer-events:none; opacity:.06; color:var(--accent); z-index:0;}
+  .cwm.a{top:44px; left:7%; width:64px; transform:rotate(-12deg);}
+  .cwm.b{bottom:34px; right:8%; width:48px; transform:rotate(15deg);}
+
+  section{padding:100px 0; position:relative;}
+  .sec-panel{background:var(--panel);} .sec-green{background:var(--green-wash);}
+  .center{text-align:center; max-width:760px; margin:0 auto;}
+  .kicker{font-size:.78rem; letter-spacing:.18em; color:var(--accentD); font-weight:600; text-transform:uppercase;}
+  h2.big{font-size:clamp(1.65rem,4.3vw,2.5rem); font-weight:500; letter-spacing:-.02em; line-height:1.2; margin-top:16px;}
+  .lead{color:var(--tx2); font-size:clamp(1rem,2vw,1.15rem); margin-top:20px; line-height:1.75;}
+  .body{max-width:640px; margin:24px auto 0; color:var(--tx); font-size:1.01rem; line-height:2.05;}
+  .body p{margin:16px 0;} .body b, .body strong{color:var(--accentD); font-weight:600;}
+  .pull{font-size:clamp(1.35rem,3.5vw,2.05rem); font-weight:500; letter-spacing:-.02em; line-height:1.4; color:var(--tx);}
+  .pull .g{color:var(--accentD);}
+
+  /* 강조 네모박스 (시각적 위계 — 스킴해도 읽히게) */
+  .callout-box{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px;
+    padding:19px 22px; margin:22px auto; max-width:640px; text-align:left; font-size:.98rem; line-height:2.0; color:var(--tx);}
+  .callout-box b{color:var(--accentD); font-weight:600;}
+  .callout-box.quote{background:#fff; border-left-color:var(--accentD); border-color:#d7e3d0; box-shadow:0 4px 16px rgba(63,125,87,.08);
+    font-family:'Noto Serif KR',serif; font-style:normal; color:var(--accentD); font-size:1.05rem; line-height:2.1; text-align:center;}
+  .callout-box.quote b{font-style:normal;}
+  .callout-box.q3{font-family:'Noto Serif KR',serif; font-size:1.1rem; color:var(--accentD); text-align:center; line-height:1.95;}
+  .callout-box.mini{margin:16px 0; font-size:.95rem;}
+  /* 아코디언 안내(탭하면 열려요) */
+  .acc-hint{display:block; font-size:.78rem; color:var(--tx3); font-weight:400; margin-top:4px;}
+  .clicknote{font-size:.92rem; color:var(--tx2);}
+  /* Pinterest 버튼 행(토글 밖) */
+  .pin-row{max-width:680px; margin:32px auto 4px; display:flex; flex-direction:column; gap:12px;}
+  .pin-row-cap{font-size:.92rem; color:var(--accentD); font-weight:600; text-align:center; margin-bottom:2px;}
+  .pin-row .pin-btn{margin-top:0;}
+
+  .concepts{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:52px;}
+  @media(max-width:820px){.concepts{grid-template-columns:1fr;}}
+  .cc{background:#fff; border:1px solid var(--line); border-radius:20px; padding:26px 24px; text-align:left;}
+  .cc .n{font-family:'Noto Serif KR',serif; color:var(--accent); font-size:1.4rem; font-weight:600;}
+  .cc h3{font-size:1.15rem; font-weight:700; margin:10px 0 4px; letter-spacing:-.02em;}
+  .cc .en{font-size:.78rem; color:var(--tx3); letter-spacing:.08em; text-transform:uppercase;}
+  .cc p{color:var(--tx2); font-size:.95rem; margin-top:12px; line-height:1.65;}
+
+  /* 컨셉별 묶음 블록 (카드 + 핀터레스트 + 예시설명 아코디언을 한 곳에) */
+  .concept-block{max-width:800px; margin:26px auto 0; padding:24px 26px 6px; background:linear-gradient(180deg,#eef5ea 0%,#fff 62%); border:1px solid #cfe0cd; border-radius:20px; box-shadow:0 4px 16px rgba(40,50,35,.05);}
+  .cb-head{display:flex; gap:15px; align-items:flex-start;}
+  .cb-num{font-family:'Noto Serif KR',serif; color:var(--accent); font-size:1.45rem; font-weight:600; line-height:1; flex:none; margin-top:2px;}
+  .cb-title h3{font-size:1.18rem; font-weight:700; letter-spacing:-.02em; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;}
+  .cb-title h3 .cb-en{font-size:.74rem; color:var(--tx3); letter-spacing:.08em; text-transform:uppercase; font-weight:600;}
+  .cb-title p{color:var(--tx2); font-size:.98rem; margin-top:6px; line-height:1.6;}
+  .concept-block .pin-btn{margin-top:18px;}
+  .concept-block .acc{border-top:1px solid var(--line); border-bottom:none; margin-top:16px;}
+  .concept-block .acc .q{padding:18px 2px;}
+  /* 의상 블록만 글씨 한 단계 축소 */
+  .concept-block.sm-clothes .acc .a .inner{font-size:.95rem; line-height:1.9;}
+  .concept-block.sm-clothes .acc .a .sub{font-size:.98rem;}
+  /* 04 단어 여정 시그니처 블록 (톤은 위 3개와 통일, 하단 여백만 맞춤) */
+  .concept-block.signature{padding-bottom:26px;}
+  .sig-body{color:var(--tx2); font-size:.99rem; line-height:1.95; margin-top:14px;}
+  .sig-body b{color:var(--accentD); font-weight:600;}
+  .sig-btn{display:flex; align-items:center; gap:13px; margin-top:18px; padding:16px 20px; background:var(--accent); border:1.5px solid var(--accent); border-radius:14px; transition:.2s;}
+  .sig-btn:hover{background:var(--accentD); border-color:var(--accentD); transform:translateY(-1px); box-shadow:0 8px 22px rgba(63,125,87,.22);}
+  .sig-btn .sig-ic{font-size:1.3rem; flex:none; color:#fff;}
+  .sig-btn .sig-txt{display:flex; flex-direction:column; min-width:0;}
+  .sig-btn .sig-txt b{font-size:1.03rem; font-weight:700; letter-spacing:-.01em; line-height:1.35; color:#fff;}
+  .sig-btn .sig-txt .sig-sub{font-size:.85rem; color:rgba(255,255,255,.9); margin-top:3px;}
+
+  .acc-list{max-width:820px; margin:44px auto 0; text-align:left;}
+  .acc{border-top:1px solid var(--line);}
+  .acc:last-child{border-bottom:1px solid var(--line);}
+  .acc .q{width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer; padding:22px 4px; display:flex; justify-content:space-between; align-items:center; gap:14px;}
+  .acc .q .qt{font-size:1.03rem; font-weight:600; letter-spacing:-.01em; color:var(--tx);}
+  .acc .q .qt .en{display:block; font-size:.72rem; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:3px;}
+  .acc .q .pm{color:var(--accent); font-size:1.5rem; font-weight:300; transition:transform .3s; flex:none;}
+  .acc.open .q .pm{transform:rotate(45deg);}
+  .acc .a{max-height:0; overflow:hidden; transition:max-height .5s ease;}
+  .acc .a .inner{padding:2px 4px 26px; color:var(--tx2); font-size:1.02rem; line-height:1.95;}
+  .acc .a .inner b{color:var(--accentD); font-weight:600;}
+  .acc .a .sub{margin:16px 0 4px; font-weight:700; color:var(--tx);}
+
+  /* 진행 흐름 — 세로 순서형(타임라인) */
+  .flow{display:flex; flex-direction:column; gap:0; max-width:460px; margin:44px auto 0; text-align:left;}
+  .flow .f{position:relative; display:flex; align-items:center; gap:16px; padding:9px 0; font-size:.99rem; color:var(--tx); background:none; border:none; border-radius:0;}
+  .flow .f .fn{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-family:'Noto Serif KR',serif; font-weight:600; font-size:.9rem; flex:none; position:relative; z-index:1;}
+  .flow .f:not(:last-child)::before{content:''; position:absolute; left:17px; top:50%; height:100%; border-left:2px solid #cddcc7; z-index:0;}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:48px; text-align:left;}
+  @media(max-width:820px){.grid3{grid-template-columns:1fr;}}
+  .grid2{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:48px; text-align:left; max-width:820px; margin-left:auto; margin-right:auto;}
+  @media(max-width:700px){.grid2{grid-template-columns:1fr;}}
+  .card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:26px 24px;}
+  .card .en{font-size:.74rem; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; font-weight:600;}
+  .card h3{font-size:1.12rem; font-weight:700; margin:6px 0 12px;}
+  .card p{color:var(--tx2); font-size:.96rem; line-height:1.7; margin:10px 0;}
+  .card b{color:var(--accentD);}
+
+  .price{max-width:560px; margin:20px auto 0;}
+  .price .row{display:flex; justify-content:space-between; padding:14px 4px; border-top:1px solid var(--line); font-size:1rem; gap:12px;}
+  .price .row:last-child{border-bottom:1px solid var(--line);}
+  .price .row .v{font-weight:700; color:var(--accentD); white-space:nowrap;}
+
+  .cta{text-align:center;} .cta .btns{margin-top:30px; display:flex; gap:20px; justify-content:center; align-items:center; flex-wrap:wrap;}
+  .note{max-width:660px; margin:24px auto 0; color:var(--tx3); font-size:.95rem; line-height:1.7;}
+
+  footer{background:var(--panel); color:var(--tx3); font-size:.84rem; border-top:1px solid var(--line); padding:44px 0; text-align:center;}
+  footer .brand{justify-content:center; color:var(--tx); margin-bottom:10px;}
+  footer a{color:var(--tx2);} footer a:hover{color:var(--tx);}
+
+  /* 문의 폼 */
+  .form-wrap{max-width:680px; margin:44px auto 0;}
+  .how{background:var(--green-wash); border:1px solid #d7e3d0; border-radius:16px; padding:20px 22px; margin-bottom:28px; font-size:.98rem; line-height:1.7; color:var(--tx2);}
+  .how-t{font-weight:700; color:var(--accentD); margin-bottom:6px;}
+  .how p{margin:0;}
+  .how .steps{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .how .steps span{color:var(--tx); font-size:.94rem;}
+  .how .steps b{display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:.78rem; align-items:center; justify-content:center; margin-right:8px;}
+  .how .steps em{color:var(--tx3); font-style:normal; font-size:.86rem;}
+  .fg{margin:24px 0;}
+  .fg-label{font-size:1.08rem; font-weight:700; color:var(--tx); letter-spacing:-.01em; display:flex; align-items:baseline; gap:8px;}
+  .fg-num{font-family:'Noto Serif KR',serif; color:var(--accent); font-size:1rem; font-weight:600;}
+  .fg-help{color:var(--tx2); font-size:.92rem; line-height:1.6; margin:8px 0 12px;}
+  .inp, .ta, .insta-handle{width:100%; font-family:inherit; font-size:1rem; color:var(--tx); background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; transition:border-color .2s; outline:none;}
+  .inp:focus, .ta:focus, .insta-handle:focus{border-color:var(--accent);}
+  .ta{min-height:110px; resize:vertical; line-height:1.7;}
+  .ref-box{margin-top:12px; background:#fff; border:1px dashed var(--copyline,#cfe0cd); border-radius:12px; padding:14px 16px; font-size:.92rem; color:var(--tx2); line-height:1.65;}
+  .ref-box b{color:var(--accentD);}
+  .insta-group{display:flex; align-items:stretch; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff;}
+  .insta-group:focus-within{border-color:var(--accent);}
+  .insta-prefix{flex:none; display:flex; align-items:center; padding:0 12px; background:var(--panel); color:var(--tx3); font-size:.9rem; border-right:1px solid var(--line);}
+  .insta-handle{border:none; border-radius:0; flex:1; min-width:0;}
+  .preview-cap{margin:28px 0 8px; font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; color:var(--tx3); text-align:center;}
+  .preview{background:#fff; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:12px; padding:16px 18px; font-size:.98rem; color:var(--tx); line-height:1.9; white-space:pre-line; min-height:120px;}
+  .preview .muted{color:var(--tx3);}
+  .form-cta{text-align:center; margin-top:30px;}
+  .inquiry-toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(20px); background:var(--accentD); color:#fff; font-size:.9rem; padding:13px 20px; border-radius:24px; box-shadow:0 6px 20px rgba(30,40,25,.28); opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:60; max-width:88%; text-align:center; line-height:1.5;}
+  .inquiry-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* 폰 전용: 글씨·여백 한 단계 더 축소 */
+  .dbr{display:inline;}
+  @media(max-width:560px){
+    .dbr{display:none;}
+    .body{line-height:2.0;} .callout-box{line-height:1.95;} .acc .a .inner{line-height:1.9;}
+    section{padding:58px 0;}
+    .hero{padding:84px 22px 62px;}
+    .hero h1{font-size:1.95rem;}
+    .hero .sub{font-size:.95rem; margin-top:16px;}
+    .hero .who{font-size:.86rem;}
+    .kicker{font-size:.7rem; letter-spacing:.14em;}
+    h2.big{font-size:1.38rem; margin-top:12px;}
+    .lead{font-size:.94rem; margin-top:14px;}
+    .body{font-size:.94rem;}
+    .pull{font-size:1.2rem;}
+    .callout-box{font-size:.9rem; padding:15px 16px; margin:18px auto;}
+    .callout-box.quote{font-size:.95rem;}
+    .callout-box.q3{font-size:1rem; line-height:1.9;}
+    .callout-box.mini{font-size:.88rem;}
+    .checks .c{font-size:.82rem; padding:8px 13px;}
+    .concept-block{padding:20px 18px 4px; margin-top:20px;}
+    .cb-num{font-size:1.25rem;}
+    .cb-title h3{font-size:1.06rem;}
+    .cb-title p{font-size:.9rem;}
+    .acc .q .qt{font-size:.98rem;}
+    .acc .a .inner{font-size:.92rem;}
+    .concept-block.sm-clothes .acc .a .inner{font-size:.87rem;}
+    .sig-body{font-size:.92rem;}
+    .sig-btn{padding:14px 15px; gap:10px;}
+    .sig-btn .sig-txt b{font-size:.96rem;} .sig-btn .sig-txt .sig-sub{font-size:.8rem;}
+    .acc .q{padding:18px 2px;}
+    .pin-btn{padding:13px 15px; gap:10px;}
+    .pin-btn .pin-txt b{font-size:.93rem;}
+    .pin-btn .pin-sub{font-size:.8rem;}
+    .card h3{font-size:1.02rem;} .card p{font-size:.9rem;}
+    .flow{max-width:100%;}
+    .flow .f{font-size:.92rem; padding:7px 0; gap:13px;}
+    .flow .f .fn{width:32px; height:32px; font-size:.85rem;}
+    .flow .f:not(:last-child)::before{left:15px;}
+    .fg-label{font-size:1rem;} .fg-help{font-size:.88rem;}
+    .how{font-size:.9rem;} .how .steps span{font-size:.88rem;}
+    .price .row{font-size:.92rem;}
+    .note{font-size:.88rem;} .clicknote{font-size:.88rem;}
+  }
+</style>
+<style id="mo-motion">
+/* ════════════════════════════════════════════════════════════════════
+   maydly 시안 · 모션 레이어  (브랜드-008 · 261005)
+   - 글자·색·순서는 그대로. 움직임만 얹는다.
+   - 숨김·장식은 전부 html.mo 아래에서만 → 스크립트가 실패하면 원래 페이지가 그대로 보인다.
+   - 폭 820px 이하 = «폰용»(짧고 단단하게, 세로로만), 그 위 = «웹용»(넓고 느긋하게, 깊이).
+   - 기준: 협업 안내서(운영-020) 모션 어휘 + 폰 공학 기준(R3) — /tmp/mo_work/R1~R3
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ① 원본 덩어리 리빌 무력화 — 조건 없이. 원본은 JS가 죽으면 글이 하나도 안 보였다 */
+.reveal, .reveal.in { opacity:1; transform:none; transition:none; }
+
+/* ② 웹/폰 수치 — 폭으로 자동 전환 */
+:root{
+  --mo-clover:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='%23000'%3E%3Cpath d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(90 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(180 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(270 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3C/g%3E%3C/svg%3E");
+  --mo-ease:cubic-bezier(.22,.68,.16,1);          /* 페이드·떠오르기 */
+  --mo-out:cubic-bezier(.16,1,.3,1);              /* 와이프·튀어나오기·미끄러지기 */
+  --mo-y:26px;  --mo-ys:12px;  --mo-yb:34px;      /* 본문 / 라벨·작은 것 / 큰 상자 */
+  --mo-x:24px;  --mo-cy:0px;                      /* 웹 2열 카드 좌우 진입 */
+  --mo-d:900ms; --mo-o:600ms; --mo-wd:800ms;      /* 이동 / 불투명 / 제목 와이프 */
+  --mo-fast:160ms; --mo-k:1;                      /* 짧은 페이드 / 내부 안무 지연 배율 */
+  --mo-h1:110ms; --mo-hsub:300ms; --mo-hwho:380ms; --mo-hc:460ms; --mo-hcs:75ms;
+  --mo-ghost:540px; --mo-cue-b:26px; --mo-cue-h:40px; --mo-cue-d:1500ms;
+  --mo-bar:2px; --mo-kl:4px; --mo-ring:1300ms;
+  --mo-fo:220ms; --mo-fd:380ms; --mo-fwd:450ms; --mo-fy:12px;   /* 빠른 스크롤·늦은 발견 = 압축 안무 */
+  --mo-num:96px; --mo-num-t:12px; --mo-num-r:26px;
+}
+@media (max-width:820px){
+  :root{
+    --mo-ease:cubic-bezier(.2,.7,.2,1);
+    /* 폰: 글(불투명)은 빨리 읽히게, 움직임·와이프는 길게 — 손가락을 멈춘 뒤에도 꼬리가 보이도록 */
+    --mo-y:18px;  --mo-ys:10px;  --mo-yb:22px;
+    --mo-x:0px;   --mo-cy:18px;
+    --mo-d:740ms; --mo-o:420ms; --mo-wd:860ms;
+    --mo-fast:140ms; --mo-k:.75;
+    --mo-h1:120ms; --mo-hsub:340ms; --mo-hwho:420ms; --mo-hc:500ms; --mo-hcs:70ms;
+    --mo-ghost:360px; --mo-cue-b:12px; --mo-cue-h:28px; --mo-cue-d:1300ms;
+    --mo-bar:2.5px; --mo-kl:0px; --mo-ring:1000ms;
+    --mo-fo:180ms; --mo-fd:320ms; --mo-fwd:380ms; --mo-fy:8px;
+    --mo-num:64px; --mo-num-t:10px; --mo-num-r:14px;
+  }
+}
+
+/* ③ 동작 어휘 — 끝 상태는 요소 원래 모습(backwards 채움 → 끝나면 흔적 없음) */
+@keyframes moFade   { from { opacity:0; } }
+@keyframes moLift   { from { translate:0 var(--mo-y); } }
+@keyframes moLiftS  { from { translate:0 var(--mo-ys); } }
+@keyframes moLiftB  { from { translate:0 var(--mo-yb); } }
+@keyframes moSide   { from { translate:var(--mo-sx, 0px) var(--mo-cy); } }
+@keyframes moSettle { from { scale:.985; } }
+@keyframes moPop    { from { opacity:0; scale:.55; } }
+@keyframes moTick   { from { opacity:0; scale:.2; } }
+@keyframes moDrawX  { from { scale:0 1; } }
+@keyframes moDrawY  { from { scale:1 0; } }
+@keyframes moGhostIn{ from { opacity:0; scale:.9; } }
+@keyframes moClvIn  { from { opacity:0; scale:.7; } }
+@keyframes moUnveil { from { clip-path:inset(-24px -24px 100% -24px); } to { clip-path:inset(-24px); } }
+@keyframes moSpin   { to { rotate:360deg; } }
+@keyframes moFloat  { 0%,100% { rotate:-4deg; translate:0 0; } 50% { rotate:5deg; translate:0 -6px; } }
+@keyframes moSway   { 0%,100% { rotate:-7deg; } 50% { rotate:7deg; } }
+@keyframes moSheen  { from { translate:0 0; opacity:1; } to { translate:380% 0; opacity:1; } }
+@keyframes moRing   { from { opacity:.55; scale:1; } to { opacity:0; scale:1.14 1.45; } }
+@keyframes moDrop {
+  0%   { opacity:0;   scale:1 0; transform-origin:50% 0; }
+  30%  { opacity:.55; scale:1 1; transform-origin:50% 0; }
+  62%  { opacity:.55; scale:1 1; transform-origin:50% 100%; }
+  100% { opacity:0;   scale:1 0; transform-origin:50% 100%; }
+}
+/* 제목 와이프 — 위에서 아래로 번지듯 드러난다(여러 줄이면 윗줄부터). 끝나면 마스크가 사라진다 */
+@keyframes moWipe {
+  from { -webkit-mask-image:linear-gradient(180deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+                 mask-image:linear-gradient(180deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+         -webkit-mask-size:100% 260%; mask-size:100% 260%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+         -webkit-mask-position:0 100%; mask-position:0 100%; }
+  to   { -webkit-mask-image:linear-gradient(180deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+                 mask-image:linear-gradient(180deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+         -webkit-mask-size:100% 260%; mask-size:100% 260%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+         -webkit-mask-position:0 0; mask-position:0 0; }
+}
+
+/* ④ 첫 화면(히어로) — 스크립트 없이 CSS만으로 «타이틀 시퀀스» */
+html.mo .hero > .wrap { position:relative; z-index:1; }
+html.mo .hero .eyebrow { animation: moFade var(--mo-o) var(--mo-ease) 0ms backwards, moLiftS var(--mo-d) var(--mo-ease) 0ms backwards; }
+html.mo .hero h1 { animation: moFade calc(var(--mo-o) * .6) var(--mo-ease) var(--mo-h1) backwards,
+                              moLiftS var(--mo-wd) var(--mo-out) var(--mo-h1) backwards,
+                              moWipe var(--mo-wd) var(--mo-out) var(--mo-h1) backwards; }
+html.mo .hero .sub { animation: moFade var(--mo-o) var(--mo-ease) var(--mo-hsub) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-hsub) backwards; }
+html.mo .hero .who { animation: moFade var(--mo-o) var(--mo-ease) var(--mo-hwho) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-hwho) backwards; }
+html.mo .hero .checks .c { --cd:var(--mo-hc);
+  animation: moFade var(--mo-o) var(--mo-ease) var(--cd) backwards, moLiftS var(--mo-d) var(--mo-out) var(--cd) backwards, moSettle var(--mo-d) var(--mo-out) var(--cd) backwards; }
+html.mo .hero .checks .c:nth-child(2) { --cd:calc(var(--mo-hc) + var(--mo-hcs)); }
+html.mo .hero .checks .c:nth-child(3) { --cd:calc(var(--mo-hc) + var(--mo-hcs) * 2); }
+html.mo .hero .checks .c:nth-child(4) { --cd:calc(var(--mo-hc) + var(--mo-hcs) * 3); }
+html.mo .hero .checks .c::before { animation: moTick calc(var(--mo-d) * .8) var(--mo-out) calc(var(--cd) + 150ms * var(--mo-k)) backwards; }
+/* 히어로 뒤 큰 클로버 실루엣 — 아주 옅게, 웹은 천천히 돈다 */
+html.mo .hero::before {
+  content:''; position:absolute; left:50%; top:47%; width:var(--mo-ghost); height:var(--mo-ghost);
+  margin:calc(var(--mo-ghost) / -2) 0 0 calc(var(--mo-ghost) / -2);
+  background:var(--accent); -webkit-mask:var(--mo-clover) center / contain no-repeat; mask:var(--mo-clover) center / contain no-repeat;
+  opacity:.045; z-index:0; pointer-events:none;
+  animation: moGhostIn 2400ms var(--mo-ease) 300ms backwards, moSpin 120s linear infinite;
+}
+/* 스크롤 신호 — 글자 없이 선 하나가 위에서 자라 아래로 빠진다 */
+html.mo .hero::after {
+  content:''; position:absolute; left:50%; bottom:var(--mo-cue-b); width:1px; height:var(--mo-cue-h); margin-left:-.5px;
+  background:linear-gradient(180deg, var(--accent), transparent); opacity:0; z-index:1; pointer-events:none;
+  animation: moDrop 2.4s ease-in-out var(--mo-cue-d) infinite;
+}
+html.mo.mo-scrolled .hero::after { animation:none; opacity:0; }
+/* 원래 있던 히어로 클로버 2개 — 피어난 뒤 숨 쉬듯 흔들림 */
+html.mo .hero .cwm { animation: moClvIn 1800ms var(--mo-ease) 350ms backwards, moFloat 7s ease-in-out 2200ms infinite; }
+html.mo .hero .cwm.b { animation: moClvIn 1800ms var(--mo-ease) 520ms backwards, moFloat 8.6s ease-in-out 3000ms infinite; }
+/* 로고 옆 클로버 — 줄기 밑동을 축으로 살랑 */
+html.mo .nav .brand .clv, html.mo footer .brand .clv { transform-origin:50% 85%; animation: moSway 7s ease-in-out 1200ms infinite; }
+html.mo footer .brand .clv { animation-play-state:paused; }
+html.mo.mo-foot-on footer .brand .clv { animation-play-state:running; }
+html.mo.mo-hero-off .hero::before, html.mo.mo-hero-off .hero::after,
+html.mo.mo-hero-off .hero .cwm { animation-play-state:paused; }
+/* 문의하기 버튼 — 첫 화면이 다 선 뒤 테두리 물결 한 번 */
+html.mo .nav .navcta { position:relative; }
+html.mo .nav .navcta::after { content:''; position:absolute; inset:0; border-radius:inherit; border:1px solid var(--accent); opacity:0; pointer-events:none;
+  animation: moRing var(--mo-ring) var(--mo-out) 1400ms 2 backwards; }
+@media (max-width:820px){
+  html.mo .hero::before { rotate:10deg; animation: moGhostIn 1600ms var(--mo-ease) 200ms backwards; }   /* 폰: 안 돈다 */
+  html.mo .nav .navcta::after { animation-delay:950ms; }
+}
+
+/* ⑤ 등장 단위 — 숨김은 마크업에 원래 있는 선택자로만(그렸다가 숨는 깜빡임 없음) */
+html.mo :is(
+  section .kicker, section h2.big, section p.pull,
+  section .center > p.lead, section .center > p.note,
+  section > .wrap > .body > p, section > .wrap > .callout-box, #concept > .wrap > p.clicknote,
+  #concept > .wrap > .concept-block, section .grid2 > .card, section .grid3 > .card,
+  #notice .acc-list > .acc, #process .flow > .f,
+  #cta .form-wrap > .how, #cta .form-wrap > .fg, #cta .form-wrap > .preview-cap, #cta .form-wrap > .preview, #cta .form-wrap > .form-cta,
+  footer > .wrap > *
+):not(.mo-in) { opacity:0; }
+
+/* 라벨 — 페이드+살짝 떠오름, 아래 짧은 선이 가운데서 양옆으로 그어진다 */
+html.mo section .kicker { position:relative; }
+html.mo section .kicker::after { content:''; position:absolute; left:50%; bottom:calc(var(--mo-kl) * -1); width:26px; height:1px; margin-left:-13px;
+  background:var(--accent); opacity:.5; pointer-events:none; }
+html.mo section .kicker.mo-in { animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLiftS var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+html.mo section .kicker.mo-in::after { animation: moDrawX calc(var(--mo-d) * 1.25) var(--mo-ease) calc(var(--mo-delay, 0ms) + 180ms * var(--mo-k)) backwards; }
+
+/* 큰 제목 — 위에서 아래로 번지듯 드러남 */
+html.mo :is(section h2.big, section p.pull).mo-in {
+  animation: moFade calc(var(--mo-o) * .6) var(--mo-ease) var(--mo-delay, 0ms) backwards,
+             moLiftS var(--mo-wd) var(--mo-out) var(--mo-delay, 0ms) backwards,
+             moWipe var(--mo-wd) var(--mo-out) var(--mo-delay, 0ms) backwards; }
+
+/* 본문 — 같이 들어온 묶음 안에서 위→아래 시차 */
+html.mo :is(section .center > p.lead, section .center > p.note, section > .wrap > .body > p,
+            #concept > .wrap > p.clicknote, #cta .form-wrap > .preview-cap, footer > .wrap > *).mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+
+/* 상자 — 떠오르며(웹은 살짝 자리 잡듯) */
+html.mo :is(section > .wrap > .callout-box, #cta .form-wrap > .how, #cta .form-wrap > .preview,
+            #cta .form-wrap > .form-cta, #cta .form-wrap > .fg).mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+@media (min-width:821px){
+  html.mo :is(section > .wrap > .callout-box, #cta .form-wrap > .how, #cta .form-wrap > .preview).mo-in {
+    animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
+               moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards; }
+  /* 인용·안내 상자 — 위에서 아래로 펼쳐지듯(왼쪽 초록 세로선이 위에서 아래로 그어지는 느낌) */
+  html.mo section > .wrap > .callout-box.mo-in {
+    animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
+               moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards,
+               moUnveil var(--mo-d) var(--mo-out) calc(var(--mo-delay, 0ms) + 60ms) backwards; }
+}
+
+/* 컨셉 블록 01~04 — 상자가 서고 → 번호가 톡 → 제목 → 버튼 → 펼침 순 */
+html.mo #concept > .wrap > .concept-block.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLiftB var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+html.mo #concept > .wrap > .concept-block.mo-in .cb-num {
+  animation: moPop calc(var(--mo-d) * .9) var(--mo-out) calc(var(--mo-delay, 0ms) + 140ms * var(--mo-k)) backwards; }
+html.mo #concept > .wrap > .concept-block.mo-in .cb-title {
+  animation: moFade var(--mo-o) var(--mo-ease) calc(var(--mo-delay, 0ms) + 180ms * var(--mo-k)) backwards,
+             moLiftS var(--mo-d) var(--mo-ease) calc(var(--mo-delay, 0ms) + 180ms * var(--mo-k)) backwards; }
+html.mo #concept > .wrap > .concept-block.mo-in > :is(.pin-btn, .sig-btn, .sig-body) {
+  animation: moFade var(--mo-o) var(--mo-ease) calc(var(--mo-delay, 0ms) + 240ms * var(--mo-k)) backwards,
+             moLiftS var(--mo-d) var(--mo-ease) calc(var(--mo-delay, 0ms) + 240ms * var(--mo-k)) backwards; }
+html.mo #concept > .wrap > .concept-block.mo-in > :is(.pin-btn, .sig-body) + :is(.pin-btn, .sig-btn) {
+  animation-delay: calc(var(--mo-delay, 0ms) + 300ms * var(--mo-k)); }
+html.mo #concept > .wrap > .concept-block.mo-in > .acc {
+  animation: moFade var(--mo-o) var(--mo-ease) calc(var(--mo-delay, 0ms) + 340ms * var(--mo-k)) backwards; }
+/* 핀터레스트·단어여정 버튼 — 자리 잡은 뒤 빛 한 줄기가 한 번 지나간다(고객이 나갔다 돌아오는 핵심 동선) */
+html.mo #concept .concept-block :is(.pin-btn, .sig-btn) { position:relative; overflow:hidden; isolation:isolate; }
+html.mo #concept .concept-block :is(.pin-btn, .sig-btn)::after {
+  content:''; position:absolute; top:0; bottom:0; left:-55%; width:45%; pointer-events:none; z-index:1; opacity:0;
+  background:linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.26) 50%, rgba(255,255,255,0) 100%); }
+html.mo #concept > .wrap > .concept-block.mo-in :is(.pin-btn, .sig-btn)::after {
+  animation: moSheen 1150ms var(--mo-ease) calc(var(--mo-delay, 0ms) + 760ms * var(--mo-k) + 200ms) backwards; }
+html.mo #concept > .wrap > .concept-block.mo-in .pin-btn + .pin-btn::after {
+  animation-delay: calc(var(--mo-delay, 0ms) + 920ms * var(--mo-k) + 200ms); }
+/* 블록 뒤 큰 번호(01~04, 원래 있는 번호의 메아리) — 가상요소라 글자 수에 안 잡힌다. 웹 96px · 폰 64px */
+html.mo #concept > .wrap { counter-reset:mocb; }
+html.mo #concept > .wrap > .concept-block { counter-increment:mocb; position:relative; isolation:isolate; }
+html.mo #concept > .wrap > .concept-block::before {
+  content:counter(mocb, decimal-leading-zero); position:absolute; top:var(--mo-num-t); right:var(--mo-num-r);
+  font-family:'Noto Serif KR', serif; font-weight:600; font-size:var(--mo-num); line-height:.8; letter-spacing:-.05em;
+  color:var(--accent); opacity:.06; z-index:-1; pointer-events:none; }
+html.mo #concept > .wrap > .concept-block.mo-in::before {
+  animation: moFade calc(var(--mo-d) * 1.6) var(--mo-ease) calc(var(--mo-delay, 0ms) + 200ms * var(--mo-k)) backwards,
+             moLiftB calc(var(--mo-d) * 1.6) var(--mo-out) calc(var(--mo-delay, 0ms) + 200ms * var(--mo-k)) backwards; }
+
+/* 카드 — 3열은 차례로, 2열은 웹에서 양옆에서 모여든다(폰은 세로만) */
+html.mo section .grid3 > .card.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+html.mo section .grid2 > .card.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moSide var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards; }
+html.mo section .grid2 > .card:nth-child(1) { --mo-sx:calc(var(--mo-x) * -1); }
+html.mo section .grid2 > .card:nth-child(2) { --mo-sx:var(--mo-x); }
+
+/* 필독 공지 4개 — 폭포처럼 */
+html.mo #notice .acc-list > .acc.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+
+/* 진행 흐름 — 단계가 서고, 번호가 톡, 다음 단계로 이어지는 선이 아래로 그어진다 */
+html.mo #process .flow > .f.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLiftS var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+html.mo #process .flow > .f.mo-in .fn {
+  animation: moPop calc(var(--mo-d) * .9) var(--mo-out) calc(var(--mo-delay, 0ms) + 70ms * var(--mo-k)) backwards; }
+html.mo #process .flow > .f:not(:last-child)::before { transform-origin:50% 0; }
+html.mo #process .flow > .f.mo-in:not(:last-child)::before {
+  animation: moDrawY calc(var(--mo-d) * 1.2) var(--mo-ease) calc(var(--mo-delay, 0ms) + 160ms * var(--mo-k)) backwards; }
+
+/* 문의 — 작성 방법 3단계 차례로, 질문 번호 톡, 마지막 버튼은 테두리 물결 */
+html.mo #cta .form-wrap > .how.mo-in .steps > span { --sd:calc(var(--mo-delay, 0ms) + 200ms * var(--mo-k));
+  animation: moFade var(--mo-o) var(--mo-ease) var(--sd) backwards, moLiftS var(--mo-d) var(--mo-ease) var(--sd) backwards; }
+html.mo #cta .form-wrap > .how.mo-in .steps > span:nth-child(2) { --sd:calc(var(--mo-delay, 0ms) + 280ms * var(--mo-k)); }
+html.mo #cta .form-wrap > .how.mo-in .steps > span:nth-child(3) { --sd:calc(var(--mo-delay, 0ms) + 360ms * var(--mo-k)); }
+html.mo #cta .form-wrap > .how.mo-in .steps b { animation: moPop calc(var(--mo-d) * .9) var(--mo-out) calc(var(--sd) + 80ms * var(--mo-k)) backwards; }
+html.mo #cta .form-wrap > .fg.mo-in .fg-num { animation: moPop calc(var(--mo-d) * .9) var(--mo-out) calc(var(--mo-delay, 0ms) + 120ms * var(--mo-k)) backwards; }
+html.mo #cta .form-cta .btn.pri { position:relative; }
+html.mo #cta .form-cta .btn.pri::after { content:''; position:absolute; inset:0; border-radius:inherit; border:1.5px solid var(--accent); opacity:0; pointer-events:none; }
+html.mo #cta .form-wrap > .form-cta.mo-in .btn.pri::after {
+  animation: moRing var(--mo-ring) var(--mo-out) calc(var(--mo-delay, 0ms) + 650ms * var(--mo-k) + 250ms) 2 backwards; }
+
+/* 펼침 — 열리면 안쪽 글이 따라 떠오른다(원래 높이 전환은 그대로) */
+html.mo .acc .a .inner { transition: opacity calc(var(--mo-o) * 1.1) var(--mo-ease) .08s, translate var(--mo-d) var(--mo-ease) .08s; }
+html.mo .acc:not(.open) .a .inner { opacity:0; translate:0 10px; transition-duration:.18s, .18s; transition-delay:0s, 0s; }
+
+/* 입력칸 — 포커스되면 은은한 테두리 번짐 */
+html.mo :is(.inp, .ta) { transition: border-color .2s, box-shadow .35s var(--mo-ease); }
+html.mo :is(.inp, .ta):focus { box-shadow:0 0 0 4px rgba(63,125,87,.10); }
+html.mo .insta-group { transition: border-color .2s, box-shadow .35s var(--mo-ease); }
+html.mo .insta-group:focus-within { box-shadow:0 0 0 4px rgba(63,125,87,.10); }
+
+/* 읽기 진행 바 — 화면 맨 위(nav 위·토스트 아래), width 가 아니라 scaleX 로 */
+html.mo #mo-progress { position:fixed; top:0; left:0; right:0; height:var(--mo-bar); z-index:50; pointer-events:none;
+  background:linear-gradient(90deg, var(--accent), var(--accentD)); transform-origin:0 50%; transform:scaleX(0); opacity:.9; }
+
+/* 섹션 클로버 — 웹은 좌우 여백에서 시차, 폰은 섹션 모서리에 작게 */
+html.mo .mo-clv { position:absolute; width:var(--s); height:var(--s); background:var(--accent);
+  -webkit-mask:var(--mo-clover) center / contain no-repeat; mask:var(--mo-clover) center / contain no-repeat;
+  opacity:.075; rotate:var(--r, 0deg); pointer-events:none; z-index:0; }
+html.mo .mo-clv:not(.mo-in) { opacity:0; }
+html.mo .mo-clv.mo-in { animation: moClvIn 1700ms var(--mo-ease) 150ms backwards; }
+html.mo .mo-clv.l { left:max(14px, calc(50% - 612px)); }
+html.mo .mo-clv.r { right:max(14px, calc(50% - 612px)); }
+@media (max-width:820px){ html.mo .mo-clv { opacity:.09; } html.mo .sec-panel > .mo-clv { opacity:.12; } html.mo .mo-clv.l { left:14px; } html.mo .mo-clv.r { right:14px; } }
+
+/* ⑥ 손끝 반응 — 웹은 마우스 올리면 들림, 폰은 누르면 살짝 눌림 */
+@media (hover:hover) and (pointer:fine){
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: all .2s, translate .45s var(--mo-ease); }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri):hover { translate:0 -2px; }
+  html.mo section :is(.grid2, .grid3) > .card { position:relative; isolation:isolate; transition: translate .5s var(--mo-ease); }
+  html.mo section :is(.grid2, .grid3) > .card::after { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:-1;
+    box-shadow:0 22px 40px -26px rgba(40,50,35,.32); opacity:0; transition: opacity .5s var(--mo-ease); }
+  html.mo section :is(.grid2, .grid3) > .card:hover { translate:0 -4px; }
+  html.mo section :is(.grid2, .grid3) > .card:hover::after { opacity:1; }
+  html.mo .navlinks a { position:relative; }
+  html.mo .navlinks a::after { content:''; position:absolute; left:0; right:0; bottom:-5px; height:1px; background:var(--accent); opacity:.65;
+    scale:0 1; transition: scale .4s var(--mo-ease); pointer-events:none; }
+  html.mo .navlinks a:hover::after { scale:1 1; }
+  html.mo .acc .q .pm { transition: transform .3s, scale .35s var(--mo-out); }
+  html.mo .acc .q:hover .pm { scale:1.18; }
+}
+@media (hover:none){
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri, .navcta, .acc .q) { -webkit-tap-highlight-color:transparent; }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: all .2s, scale .2s var(--mo-out); }
+  html.mo .navcta { transition: scale .2s var(--mo-out); }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri):active { scale:.97; transition-duration:.2s, .09s; }
+  html.mo .navcta:active { scale:.95; transition-duration:.09s; }
+  html.mo .acc .q { transition: scale .2s var(--mo-out); }
+  html.mo .acc .q:active { scale:.985; transition-duration:.09s; }
+}
+
+/* ⑦ 빨리 지나갈 때·늦게 발견됐을 때 = «압축 안무»(역할별 동작은 그대로, 짧고 작게) / 위쪽 건너뛴 것 = 즉시 */
+html.mo .mo-in.mo-fast { --mo-o:var(--mo-fo); --mo-d:var(--mo-fd); --mo-wd:var(--mo-fwd); --mo-y:var(--mo-fy); --mo-ys:calc(var(--mo-fy) * .6);
+  --mo-yb:var(--mo-fy); --mo-x:0px; --mo-cy:var(--mo-fy); --mo-k:.3; }
+html.mo .mo-in.mo-now  { animation: none !important; }
+html.mo .mo-now *:not(.clv), html.mo .mo-now::before, html.mo .mo-now::after,
+html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important; }
+
+/* ⑧ 동작 줄이기 — 이중 안전(보통은 게이트가 아예 안 열린다) */
+@media (prefers-reduced-motion: reduce){
+  html.mo *, html.mo *::before, html.mo *::after { animation: none !important; }
+  html.mo :is(
+    section .kicker, section h2.big, section p.pull, section .center > p.lead, section .center > p.note,
+    section > .wrap > .body > p, section > .wrap > .callout-box, #concept > .wrap > p.clicknote,
+    #concept > .wrap > .concept-block, section .grid2 > .card, section .grid3 > .card,
+    #notice .acc-list > .acc, #process .flow > .f,
+    #cta .form-wrap > .how, #cta .form-wrap > .fg, #cta .form-wrap > .preview-cap, #cta .form-wrap > .preview, #cta .form-wrap > .form-cta,
+    footer > .wrap > *) { opacity:1 !important; }
+  html.mo .acc .a .inner { transition:none !important; opacity:1 !important; translate:none !important; }
+}
+
+/* ⑨ 인쇄(아이폰 공유→프린트·PDF 저장 포함) — 지나가지 않은 섹션도 전부 보이게 */
+@media print{
+  html.mo :is(
+    section .kicker, section h2.big, section p.pull, section .center > p.lead, section .center > p.note,
+    section > .wrap > .body > p, section > .wrap > .callout-box, #concept > .wrap > p.clicknote,
+    #concept > .wrap > .concept-block, section .grid2 > .card, section .grid3 > .card,
+    #notice .acc-list > .acc, #process .flow > .f,
+    #cta .form-wrap > .how, #cta .form-wrap > .fg, #cta .form-wrap > .preview-cap, #cta .form-wrap > .preview, #cta .form-wrap > .form-cta,
+    footer > .wrap > *), html.mo .acc .a .inner { opacity:1 !important; animation:none !important; translate:none !important; }
+  html.mo #mo-progress, html.mo .mo-clv, html.mo .hero::before, html.mo .hero::after { display:none !important; }
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none"><symbol id="clover" viewBox="0 0 40 40"><g fill="currentColor"><path d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(90 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(180 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(270 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/></g></symbol></svg>
+
+<div class="nav" id="nav"><div class="wrap in">
+  <div class="brand">maydly <svg class="clv" width="17" height="17" style="color:var(--accent)"><use href="#clover"/></svg></div>
+  <div class="navlinks">
+    <a href="#direction">촬영 방향</a>
+    <a href="#concept">시안 방향</a>
+    <a href="#structure">촬영 구성</a>
+    <a href="#guide">준비 참고</a>
+    <a href="#studio">촬영 공간</a>
+    <a href="#notice">필독 공지</a>
+  </div>
+  <a class="navcta" href="#cta">문의하기</a>
+</div></div>
+
+<!-- HERO -->
+<header class="hero">
+  <svg class="cwm a"><use href="#clover"/></svg><svg class="cwm b"><use href="#clover"/></svg>
+  <div class="wrap">
+    <div class="eyebrow reveal">mad about you · Draft Proposal 2026</div>
+    <h1 class="serif reveal">너를 담는 순간,<br><span class="em">세상이 반하다</span></h1>
+    <p class="sub reveal">지금의 나를 바라보고 기록하는 촬영.</p>
+    <p class="who reveal">MyoungJin Kim · @maydly_u</p>
+    <div class="checks reveal">
+      <div class="c">스튜디오 호리존에서, 나를 중심으로 진행되는 촬영</div>
+      <div class="c">의상 / 소품 / 색상 중 하나의 포인트로 완성되는 촬영</div>
+      <div class="c">감정, 분위기, 느낌 등 지금의 ‘나’를 표현</div>
+      <div class="c">지금의 내가 가진 톤 앤 매너를 기록</div>
+    </div>
+  </div>
+</header>
+
+<!-- 촬영 방향 -->
+<section id="direction"><div class="wrap center reveal">
+  <div class="kicker">촬영 방향 · Project Direction</div>
+  <h2 class="big serif" data-lb="direction-h2">안녕하세요!<br>제 촬영에 대한<br>가치관을 먼저<br>공유드리려고 해요.</h2>
+  <div class="body">
+    <p data-lb="direction-b1p1">요즘 사진이 단순히 예쁘게 나오는 걸 넘어서,<br>‘지금의 나’를 남기는<br>하나의 기록으로 받아들여지는 경우가 많죠.<br>저 역시 그런 촬영을 지향하고 있어요.</p>
+    <p data-lb="direction-b1p2">저는 촬영을 통해 모델님이 가진<br>분위기, 감정, 그리고<br>지금 보여주고 싶은 모습을<br>호리존에서 자연스럽고 편안하게 담아내고 싶어요.</p>
+  </div>
+  <div class="callout-box quote" data-lb="direction-quote">단순히 ‘예쁘게 나오는 컷’이 아니라,<br>시간이 지나도 내가 고스란히 느껴지는 사진.<br>그게 제 촬영의 핵심이에요.</div>
+  <div class="body">
+    <p data-lb="direction-b2p1">그리고 이 모든 과정은 저 혼자 만드는 게 아니에요.<br>디자이너 <b>수빈</b>님과 둘이 함께,<br>시안 방향부터 스타일링까지 같이 준비하고 있어요.</p>
+    <p data-lb="direction-b2p2">두 사람의 시선이 더해지는 만큼,<br>모델님께 맞는 방향을 더 섬세하게 잡아갈 수 있어요 🙂</p>
+    <p data-lb="direction-b2p3">이 촬영은 사진을 찍는 것을 넘어,<br><b>지금의 나를 바라보고 기록하는 과정</b>에 가까워요.</p>
+    <p data-lb="direction-b2p4">뒤에 시안에 대한 글과 사진을 준비해뒀어요.<br>따라해야 하는 틀은 아닌, 제가 생각하는 무드와 방향성을 참고차 정리해둔 자료예요.</p>
+  </div>
+</div></section>
+
+<!-- 핵심 안내 -->
+<section class="sec-green" id="core"><div class="wrap center reveal">
+  <div class="kicker">핵심 안내 · Project Photo</div>
+  <p class="pull serif" style="margin-top:18px;">이 촬영에서<br>제일 중요한 건<br>딱 하나예요.<br><br>“<span class="g">왜 이 시안이<br>끌렸는지</span>”</p>
+  <div class="body">
+    <p data-lb="core-b1">예쁘게, 멋있게 남기고 싶은 마음은 당연해요.<br>다만 그 사진의 사람이 왜 그렇게 보였는지,<br>나는 왜 지금의 나를 그렇게 담고 싶었는지,<br>한 번만 더 생각해 주시면 충분해요.</p>
+  </div>
+  <div class="callout-box quote" data-lb="core-quote"><b>"잘 해야 한다"</b> 는 생각은 내려두셔도 괜찮아요.<br><b>난데 뭐 어때</b> — 그 마음으로 와주시면 돼요.<br>나다운 게 아름다운 거고,<br>아름다운 게 나다운 거니까요.</div>
+  <div class="body">
+    <p data-lb="core-b2">시안은 따라 하는 기준이 아니라,<br>“저 사람은 왜 저런 분위기로 보이는지”를<br>느껴보는 참고 자료예요. 처음이어도 괜찮아요.<br>오히려 더 솔직한 모습이 나오는 경우가 많아요.</p>
+  </div>
+</div></section>
+
+<!-- 시안 방향 3컨셉 -->
+<section id="concept"><div class="wrap">
+  <div class="center reveal">
+    <div class="kicker">시안 방향 · Why Three Concept</div>
+    <h2 class="big serif" data-lb="concept-h2">준비할 때<br>제일 많이 나오는<br>고민이요.</h2>
+  </div>
+  <div class="callout-box q3 reveal" style="margin-top:26px;" data-lb="concept-q3">“뭘 입어야 하지?”<br>“뭘 들고 가야 하지?”<br>“어떤 느낌으로 해야 하지?”</div>
+  <div class="center reveal">
+    <p class="lead" style="margin-top:0;" data-lb="concept-lead">준비가 어렵게 느껴질 땐 선택지를 줄이는 게 좋아요.<br>그래서 이번 촬영의 기준은 복잡하게 잡기보다,<br><b>의상 / 소품 / 색상 중 하나</b>를 선택해<br>그 방향에 집중하는 방식으로 정리했어요.<br>하나의 기준이 있으면 결과물도 더 뚜렷해져요.<br>나다운 선택이 가장 분명한 개성이 되니까요.</p>
+  </div>
+  <p class="clicknote reveal" style="text-align:center; margin:30px auto 0; max-width:640px;" data-lb="concept-clicknote">각 컨셉마다 <b style="color:var(--accentD)">참고 사진</b>과 <b style="color:var(--accentD)">예시·설명</b>을 함께 담았어요 🙂<br>참고 사진은 버튼으로 바로, 예시·설명은 눌러서 펼쳐집니다.</p>
+
+  <!-- 01 의상 -->
+  <div class="concept-block reveal sm-clothes">
+    <div class="cb-head"><span class="cb-num">01</span><div class="cb-title"><h3>의상 <span class="cb-en">Styling Focus</span></h3><p data-lb="c01-sub">내가 어떤 사람인지를 보여주는 하나의 선택지</p></div></div>
+    <a class="pin-btn" href="https://pin.it/2tCzZzHa3" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Styling Focus<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
+    <div class="acc"><button class="q"><span class="qt">의상 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      옷을 잘 입는 사람만을 위한 촬영이 아니라, 그 옷을 입은 사람이 어떤 분위기와 톤을 가지고 있는지가 더 잘 보이는 촬영이에요. 지금의 나를 가장 편하게 보여줄 수 있는 옷이면 충분해요. 중요한 건 잘 어울리게 입었는지보다, <b>그 옷을 입었을 때 내가 얼마나 편안한지</b>예요.
+      <div class="sub">A. 평소의 나를 가장 잘 보여주는 옷</div>가장 자주 손이 가는 옷, 입었을 때 몸이 편하고 기분이 좋아지는 옷이면 충분해요. “꾸민 느낌”이 아니어도 괜찮고, 오히려 자연스러울수록 사진에서도 편안한 분위기가 잘 담겨요.
+      <div class="sub">B. 나의 다른 면을 꺼내는 옷 (포인트 1개)</div>특별하거나 과한 의상이 아니어도 괜찮아요. 실루엣이 조금 다르거나, 소재나 디테일처럼 포인트가 하나만 있어도 사진의 느낌은 충분히 달라져요. 중요한 건 눈에 띄게 입었는지가 아니라, 내가 어떤 선택을 했는지예요.
+      <div class="sub">C. ‘지금’의 나를 보여주는 스타일</div>요즘 내가 좋아하는 색, 요즘 자주 입게 되는 옷, 요즘의 취향은 시간이 지나면 자연스럽게 바뀌잖아요. 지금의 선택이 가장 기록 가치가 있다고 생각해요. 이번 촬영은 그 순간의 취향과 분위기를 사진으로 남기는 작업이에요.
+      <p style="margin:14px 0 0">촬영할 때도 옷을 돋보이게 연출하기보다는, 표정이나 분위기가 자연스럽게 나올 수 있도록 진행할 거예요. 옷은 어디까지나 하나의 도구이고, <b>사진의 중심은 항상 모델님 본인</b>이에요.</p>
+    </div></div></div>
+  </div>
+
+  <!-- 02 소품 -->
+  <div class="concept-block reveal">
+    <div class="cb-head"><span class="cb-num">02</span><div class="cb-title"><h3>소품 · 악세서리 <span class="cb-en">Object / Accessory</span></h3><p data-lb="c02-sub">촬영을 조금 더 편안하게 만들어주는 요소</p></div></div>
+    <a class="pin-btn" href="https://pin.it/aUXJM7zLa" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Object / Accessory<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
+    <a class="pin-btn" href="https://maydly.github.io/flower/" target="_blank" rel="noopener"><span class="pin-ic">🌷</span><span class="pin-txt"><b>내 꽃 정하기<br>어떤 꽃을 들지 같이 정해봐요</b><span class="pin-sub">꽃과 함께 찍고 싶으시다면,<br>하나씩 고르면 정리표가 나와요 ›</span></span></a>
+    <div class="acc"><button class="q"><span class="qt">소품 · 악세서리 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      촬영을 조금 더 편안하게 만들어주는 요소예요! 촬영하다 보면 손을 어디에 둬야 할지, 어떤 표정을 지어야 할지 애매한 순간이 생기는데, 소품이나 악세서리 하나만 있어도 그 부담이 자연스럽게 줄어들어요. 중요한 건 그 소품이 <b>‘나를 조금 더 편하게 만들어주는지’</b>예요.
+      <div class="sub">A. 평소에 자주 사용하는 소품 / 악세서리</div>평소에 자주 착용하는 반지나 목걸이, 늘 들고 다니는 가방이나 물건처럼 이미 내 몸과 생활에 익숙한 아이템이면 좋아요. 이런 소품은 촬영할 때도 자연스럽게 손이 가고, 표정이나 자세도 훨씬 편안하게 만들어줘요.
+      <div class="sub">B. 요즘 유난히 끌리는 아이템 하나</div>특별한 의미가 없어도 괜찮아요. 요즘 괜히 자꾸 눈이 가는 물건, 손에 들고 있으면 기분이 괜찮아지는 아이템 하나면 충분해요. 중요한 건 그걸 선택한 사람이 ‘나’라는 점이에요.
+      <div class="sub">C. 촬영을 조금 더 편하게 만들어주는 소품</div>촬영할 때 손을 가만히 두는 게 어색하다면, 소품은 그 자체로 좋은 ‘이유’가 돼요. 손에 들고 있어도 되고, 만지거나 기대거나 자연스럽게 사용하는 모습도 좋아요. 사진 속에서도 억지로 만든 포즈가 아니라 그 순간의 분위기가 그대로 담기게 돼요.
+      <div class="sub">D. 꽃을 들고 싶다면</div>꽃은 유난히 요청이 많은 소품이에요. 다만 막상 고르려면 어떤 꽃을, 얼마나, 어떤 의미로 들지 막막해지죠. 그래서 <b>따로 정리해뒀어요.</b> 위의 「내 꽃 정하기」로 들어가시면 하나씩 고르면서 정할 수 있고, 마지막에 꽃집에 그대로 가져갈 수 있는 정리표가 나와요. 꼭 준비하셔야 하는 건 아니니, 들고 싶은 마음이 있을 때만 보셔도 괜찮아요.
+      <div class="callout-box mini">이 촬영은 소품 자체를 강조하는 촬영이 아니라, <b>소품을 통해 모델님의 분위기와 취향이 드러나는 촬영</b>이에요. 소품은 하나면 충분하고, “이걸 들면 조금 편할 것 같다” 이 정도 기준으로 선택해주셔도 괜찮아요.</div>
+    </div></div></div>
+  </div>
+
+  <!-- 03 색상 -->
+  <div class="concept-block reveal">
+    <div class="cb-head"><span class="cb-num">03</span><div class="cb-title"><h3>색상 <span class="cb-en">Color Point</span></h3><p data-lb="c03-sub">지금의 나를 가장 직관적으로 보여주는 기준</p></div></div>
+    <a class="pin-btn" href="https://pin.it/2BPpkOd47" target="_blank" rel="noopener"><span class="pin-ic">📌</span><span class="pin-txt"><b>Pinterest · Color Point<br>시안 참고 사진 보기</b><span class="pin-sub">클릭하면 제가 정리해둔 참고 사진 모음<br>(핀터레스트)으로 이동해요 ›</span></span></a>
+    <div class="acc"><button class="q"><span class="qt">색상 · 예시와 설명<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      이번 촬영에서 가장 가볍게 방향을 잡을 수 있는 방식이에요. 의상 전체를 고민하지 않아도, 색 하나만 정해도 촬영 방향이 또렷해질 수 있어요. “이 색이 잘 어울릴까?”보다는, <b>“요즘 내가 왜 이 색에 끌리는지”</b>를 더 중요하게 봐요.
+      <div class="sub">A. 요즘 가장 눈에 들어오는 색 하나</div>최근에 옷이나 소품을 고를 때 유독 자주 눈에 들어오는 색이 있을 거예요. 강한 색이어도 괜찮고, 파스텔처럼 아주 은은한 색이어도 괜찮아요. 그 색 하나가 전체 분위기를 잡아주는 기준이 돼요.
+      <div class="sub">B. 작은 포인트로 사용하는 색</div>색을 꼭 옷 전체에 쓰지 않아도 괜찮아요. 양말, 신발, 가방, 머리핀, 악세서리처럼 아주 작은 부분에만 들어가도 충분해요. 포인트 컬러가 하나만 있어도 사진은 훨씬 정리되어 보이고, 컨셉이 명확하게 느껴져요.
+      <div class="sub">C. 분위기를 만들어주는 색</div>어떤 색은 그 자체로 감정을 만들어주기도 해요. 차분해 보이는 색, 가볍고 밝아 보이는 색, 조금은 차갑거나 드라이한 느낌의 색처럼 색 하나만으로도 사진의 온도가 달라질 수 있어요. 그 색을 통해 지금의 나를 어떤 분위기로 남기고 싶은지를 자연스럽게 표현해보면 좋아요.
+      <div class="callout-box mini">결과물은 “색이 눈에 띄는 사진”이라기보다, <b>색을 통해 사람이 더 또렷해 보이는 사진</b>이 될 거예요. “지금 이 색이 나 같다” 그 정도 기준으로 선택해주셔도 충분해요.</div>
+    </div></div></div>
+  </div>
+
+  <!-- 04 단어 여정 (maydly 시그니처) -->
+  <div class="concept-block signature reveal">
+    <div class="cb-head"><span class="cb-num">04</span><div class="cb-title"><h3>단어 여정 <span class="cb-en">Word Journey · maydly 시그니처</span></h3><p>어떻게 찍히고 싶은지 아직 모르겠다면, 여기부터 🍀</p></div></div>
+    <div class="sig-body">의상·소품·색상도 아직 감이 안 잡히시나요? 그럴 땐 마음에 드는 <b>단어를 골라가며</b> ‘오늘의 나’를 정리해보는 2~3분짜리 과정이에요. 끝까지 가면 <b>다섯 단어</b>로 지금의 결이 정리되고, 그걸 보고 제가 어떤 빛과 표정으로 담을지 미리 잡아둘게요.</div>
+    <a class="sig-btn" href="https://maydly.github.io/maydly-hub/word-journey/" target="_blank" rel="noopener"><span class="sig-ic">✦</span><span class="sig-txt"><b>단어 여정 체험하기</b><span class="sig-sub">클릭하면 새 창에서 열려요 · 2~3분이면 충분해요 · 정답은 없어요 ›</span></span></a>
+  </div>
+</div></section>
+
+<!-- 촬영 구성 -->
+<section class="sec-panel" id="structure"><div class="wrap center reveal">
+  <div class="kicker">촬영 구성 · Concept Structure</div>
+  <h2 class="big serif" data-lb="structure-h2">촬영은 총 2시간 정도로 진행돼요.</h2>
+  <p class="lead" data-lb="structure-lead">촬영 + 셀렉까지 포함된 시간이에요 🙂</p>
+  <div class="grid2">
+    <div class="card"><div class="en">01</div><h3>메인 촬영</h3><p data-lb="structure-card1">원하시는 분위기 기준으로 같이 방향 잡아서 진행해요.</p></div>
+    <div class="card"><div class="en">02</div><h3>서브 촬영</h3><p data-lb="structure-card2">메인에서 잡힌 분위기를 바탕으로, 제가 원하시는 분위기를 참고해 어울릴 것 같은 메인과 다른 결의 방향을 하나 제안드려요. 같이 상의하면서 맞춰가는 방식이라 편하게 생각해주셔도 돼요.</p></div>
+  </div>
+  <p class="note" data-lb="structure-note">결과물 장수·전달 방식·원본 등<br>아래 <b>필독 공지사항</b>에 안내 정리해뒀어요.</p>
+  <div class="callout-box mini" style="text-align:center; max-width:620px; margin-top:20px;" data-lb="structure-polaroid">🎞 <b>폴라로이드 · 빈티지 디카</b>는 기본 구성은 아니에요.<br>촬영 가능한 경우에 한해 <b>기념으로 함께 기록</b>해드려요 🙂<br>필요하신 경우 말씀 해주셔도 좋아요!</div>
+</div></section>
+
+<!-- 준비 참고 -->
+<section id="guide"><div class="wrap">
+  <div class="center reveal">
+    <div class="kicker">준비 참고 · Styling Guide</div>
+    <h2 class="big serif" data-lb="guide-h2">촬영 전 준비에 참고해주세요.</h2>
+    <p class="lead" data-lb="guide-lead">촬영 전 준비하실 때 참고 안내입니다.<br>준비한 만큼 결과물에 그대로 담겨요.<br><b>완벽한 준비보다 방향을 함께 맞추는 게</b> 중요해요 🙂</p>
+  </div>
+  <div class="grid3 reveal">
+    <div class="card"><div class="en">Hair & Makeup</div><h3>헤어 / 메이크업</h3>
+      <p data-lb="guide-hm1">헤어/메이크업은 촬영에 <b>포함되어 있지 않습니다.</b><br>원하시는 경우 샵에서 받고 오셔도 괜찮습니다.<br><br>다만 샵 이용 예정이시거나 헤어/메이크업 방향이 크게 달라지는 경우에는, 촬영 시안과 잘 맞는지 미리 한 번만 공유해주시면 감사하겠습니다.</p>
+      <p data-lb="guide-hm2">메이크업은 <b>매트한 피부 표현</b>으로 준비해주시면 좋겠어요.<br>스튜디오 조명이 강하게 들어가는 편이라, 매트한 쪽을 추천드리며, 제 생각에 훨씬 잘 나오는 편이에요.😉</p></div>
+    <div class="card"><div class="en">Clothes</div><h3>의상</h3>
+      <p data-lb="guide-clothes1">의상은 시안을 참고한 기준으로 자유롭게 준비해주셔도 괜찮아요 🙂 시안이 정리되고 나면 참고하실 수 있는 이미지도 따로 같이 보내드리고 있어서, 그 안에서 편하게 취향 맞게 준비해주시면 됩니다. 예약이 확정되면 의상 준비 관련해서 별도로 안내 드릴게요 🙂</p>
+      <p data-lb="guide-clothes2">일정 확정 후 준비 내용 공유하실 때<br><b>요즘 좋아하는 노래 2~3곡</b>도 같이 알려주세요 🎵<br>모델님의 ‘지금’의 분위기를 이해하는 데 참고가 돼요.</p></div>
+    <div class="card"><div class="en">Props</div><h3>소품</h3>
+      <p data-lb="guide-props1">스튜디오에는 제 소유의 다양한 소품과 배경지 등을 보관, 보유하고 있어요. 다만 촬영마다 사용 상황이 달라 모두 정리해서 미리 목록을 드리기가 어렵고, 컨셉 상의 시 필요한 것들이 있다면 먼저 가능한 부분 말씀 드릴게요!</p>
+      <p data-lb="guide-props2">당일 현장에서 함께 확인하면서 활용하는 방식도 괜찮아요.</p>
+      <p data-lb="guide-props3">원하시는 이미지나 시안에 <b>꼭 필요한 소모성 및 개인 소품은 반드시 직접 준비</b>해 오시길 부탁드려요 🙂</p></div>
+  </div>
+</div></section>
+
+<!-- 비하인드 -->
+<section class="sec-green" id="behind"><div class="wrap center reveal">
+  <div class="kicker">Behind The Scenes · 비하인드 촬영</div>
+  <p class="pull serif" style="margin-top:18px;" data-lb="behind-pull">촬영은<br>결과물뿐만 아니라<br>그 순간까지<br>함께 남아요.</p>
+  <div class="body">
+    <p data-lb="behind-b1">촬영 중 자연스럽게 나오는 표정이나 움직임,<br>그날의 공기감 같은 것들을<br><b>빈티지 캠코더</b>로 함께 기록해드리고 있어요 🎞</p>
+    <p data-lb="behind-b2">사진으로 남는 모습과는 또 다르게, 촬영하는 동안의 나를 그대로 담아볼 수 있어서 나중에 보면 그때의 느낌이나 분위기가 조금 더 생생하게 기억나는 기록이 되기도 해요.</p>
+    <p data-lb="behind-b3">나의 촬영 기록을 담길 원하시는 경우 예약 확정 후 카카오 채널로 요청 말씀해주시면 돼요 🙂</p>
+  </div>
+</div></section>
+
+<!-- 진행 흐름 -->
+<section id="process"><div class="wrap center reveal">
+  <div class="kicker">진행 흐름 · Process</div>
+  <h2 class="big serif" data-lb="process-h2">프로젝트 진행 기본 기준</h2>
+  <p class="lead" data-lb="process-lead">촬영 일정은 사전 협의를 통해 확정되며,<br>확정된 일정은 촬영 진행을 기준으로 유지됩니다.</p>
+  <div class="flow">
+    <div class="f"><span class="fn">01</span>시안 공유 및 촬영 방향 상의</div>
+    <div class="f"><span class="fn">02</span>일정 협의 및 확정</div>
+    <div class="f"><span class="fn">03</span>스튜디오 예약</div>
+    <div class="f"><span class="fn">04</span>스타일링 및 촬영 준비</div>
+    <div class="f"><span class="fn">05</span>촬영 전 준비내용 공유 소통</div>
+    <div class="f"><span class="fn">06</span>촬영 진행</div>
+    <div class="f"><span class="fn">07</span>셀렉 및 보정본 전달</div>
+  </div>
+</div></section>
+
+<!-- 촬영 공간 -->
+<section class="sec-panel" id="studio"><div class="wrap center reveal">
+  <div class="kicker">촬영 공간 · Studio</div>
+  <h2 class="big serif" data-lb="studio-h2">촬영 공간 안내</h2>
+  <div class="callout-box" style="margin-top:26px;" data-lb="studio-box">촬영은 <b>서울 둔촌동 호리존 스튜디오</b>에서 진행해요.<br>해당 스튜디오에는 <b>제 소유의 촬영 장비와 소품, 배경지 등을 보관</b> 중이며, 같은 공간에서 꾸준히 촬영하다 보면 공간에 대한 이해도가 쌓이고, 그게 사진의 일관성과 완성도로 이어진다고 생각해요.<br><br>촬영 일정이 확정되면 스튜디오 대관 비용이 발생하며,<br>해당 비용은 모델님과 <b>n/1 기준으로 나누어 부담</b>합니다.<br>대관 비용은 예약 시점의 스튜디오 요금을 기준으로 사전에 안내드려요.<br><br><b>별도의 촬영비는 받지 않아요.</b><br>모델님이 부담하시는 건<br>스튜디오 대관료를 n/1로 나눈 금액뿐이에요.<br>원하시는 추가 결과물이 있을 때만 아래 ‘별도 요청 비용’이 발생합니다.</div>
+</div></section>
+
+<!-- 필독 공지 -->
+<section id="notice"><div class="wrap">
+  <div class="center reveal">
+    <div class="kicker">필독 · Notice</div>
+    <h2 class="big serif">필독 공지사항</h2>
+    <p class="lead" data-lb="notice-lead">아래 공지사항은 촬영 전 꼭 한 번만 확인해주시면 돼요 🙂<br>확인하신 뒤 진행 의사를 주시면 함께 준비 시작할게요!<br>촬영은 상호간의 준비와 책임을 기반으로<br>동일한 기준과 흐름 안에서 진행됩니다.<br>완성도 높은 결과를 위해<br>아래 내용을 충분히 확인 후 진행 부탁드립니다.</p>
+  </div>
+  <div class="acc-list reveal">
+    <div class="acc"><button class="q"><span class="qt"><span class="en">01 · Copyright</span>사진 활용 및 저작권에 대하여<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      촬영을 통해 제작된 사진은 모델과 작가 양측 모두 <b>포트폴리오 및 홍보 목적으로 자유롭게 활용</b>하실 수 있습니다. (Instagram · Blog · YouTube · SNS) 촬영 현장에서 편하게 모든 것을 촬영하셔도 괜찮아요 🙂
+      <div class="callout-box mini">다만 인스타그램에 업로드하실 때는 출처 표기로 <b>사진 태그 + @maydly_u 태그</b>를 함께 부탁드립니다.</div><p style="margin:12px 0 0">그 외의 사용에 대한 책임은 사용자에게 있어요. 특정 용도로 활용을 제한하고 싶으시거나 별도 요청이 있으시면 사전에 말씀해 주세요.</p>
+    </div></div></div>
+    <div class="acc"><button class="q"><span class="qt"><span class="en">02 · Delivery</span>촬영물 전달 및 기준 안내<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      촬영 후 결과물은 <b>카카오톡 채널</b>을 통해 전달되며, 작가와 함께 셀렉한 사진을 기준으로 보정 작업이 진행됩니다. <b>1컨셉 기준 5장, 총 2컨셉 촬영 → 10장</b>의 사진이 기본 제공됩니다. 이때 고르시는 10장은 원하시는 사진을 먼저 받아보실 수 있도록 전달드리는 방식이에요.
+      <p style="margin:12px 0 0">보정 작업 후 <b>한 달 이내 JPG 파일</b>로 전달됩니다. 가공되지 않은 원본(RAW)은 제공되지 않으며, 전체 셀렉 원본 JPG가 필요하신 경우 별도 요청을 통해 제공됩니다. 기본 전달본은 <b>Maydly 브랜드 표기본</b>이며, 무표기본이 필요하신 경우 별도 요청으로 제공됩니다.</p>
+      <div class="sub">Additional Request · 별도 요청 시 비용</div>
+      <div class="price">
+        <div class="row"><span>전체 셀렉 원본 JPG 요청</span><span class="v">100,000원</span></div>
+        <div class="row"><span>전체 셀렉 JPG 색보정본</span><span class="v">150,000원</span></div>
+        <div class="row"><span>추가 디테일 보정 (1장당)</span><span class="v">10,000원</span></div>
+        <div class="row"><span>워터마크 제거 요청</span><span class="v">10,000원</span></div>
+      </div>
+    </div></div></div>
+    <div class="acc"><button class="q"><span class="qt"><span class="en">03 · Policy</span>변경 및 취소 규정<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      일정이 확정되는 순간 <b>스튜디오 공간, 작가와 디자이너의 시간, 사전 준비</b>까지 전부 그 일정에 맞춰 잡히게 됩니다.<br>취소나 변경이 생기면 그 모든 준비에 영향이 가는 점 꼭 참고 부탁드립니다.
+      <div class="sub">🗓 예약 취소 · 환불</div>· 촬영일 기준 15일 전까지 → <b>80% 환불</b><br>· 촬영일 기준 14일 이내 → <b>환불 불가</b><br>· 14일 이내 예약 시에도 동일 적용<br>· 촬영 후 환불 불가
+      <div class="sub">🔁 예약 변경</div>· 촬영일 기준 14일 전까지 <b>1회 변경 가능 · 수수료 10,000원</b><br>· 14일 이내 변경 요청 시 기존 예약금으로 재예약 불가, 새 예약으로 진행<br>· 예약 변경 후 환불 불가
+      <div class="sub">☔ 기상 상황</div>· 비 · 눈 등 일반적인 기상은 <b>정상 진행</b><br>· 폭우 · 폭설 등 촬영이 어려운 수준의 기상 시 <b>날짜 변경 또는 100% 환불</b>
+    </div></div></div>
+    <div class="acc"><button class="q"><span class="qt"><span class="en">04 · Standard</span>준비 기준 및 진행이 어려운 경우<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+      이 촬영은 모델님과 함께 준비해가는 방식이라, 예약 후 사전 준비와 소통이 결과물에 중요한 영향을 줍니다.<div class="callout-box mini">사전 준비 및 전달 기한은 <b>촬영일 기준 5일 전까지</b>입니다. 의상, 시안, 준비 내용이 기한 내 확인되어야 촬영 방향을 미리 점검하고 필요한 준비를 진행할 수 있어요.</div>
+      <p style="margin:12px 0 0">촬영일 5일 전까지 필요한 준비 내용이 확인되지 않거나, 일정 조율 / 시안 공유 / 기본적인 소통이 어려운 경우에는 정상 진행이 어려울 수 있습니다. 단, 사전 준비 미확인으로 촬영 진행이 불가능한 경우에는 <b>당일 취소와 동일한 기준</b>이 적용됩니다.</p>
+      <p style="margin:12px 0 0">확정된 일정은 서로의 비용으로 대관한 스튜디오와 각자의 시간, 사전 준비를 약속한 일정이기 때문에 변경이나 취소가 필요한 경우 가능한 한 빠르게 말씀 부탁드립니다. 준비 미확인으로 촬영 진행이 어려운 경우에는 위 변경·취소 기준과 별도로 해당 기준이 적용됩니다.</p>
+    </div></div></div>
+  </div>
+</div></section>
+
+<!-- 문의 폼 -->
+<section class="sec-panel" id="cta"><div class="wrap">
+  <div class="center reveal">
+    <div class="kicker">Inquiry · 문의하기</div>
+    <h2 class="big serif" data-lb="cta-h2">문의 전, 아래만<br>채워주세요 🙂</h2>
+    <p class="lead" data-lb="cta-lead">maydly의 촬영은 <b>모델님을 가장 "나" 답게 남기는</b> 촬영이에요. 그 모습을 함께 그려가기 위해, 아래 몇 가지만 여쭤볼게요 🙂🍀</p>
+    <p class="note" style="margin-top:14px" data-lb="cta-note">촬영 진행 의사를 보내주시면, 위 안내 사항을 확인하고 동의해주신 것으로 보고 예약 준비를 시작합니다.</p>
+  </div>
+
+  <div class="form-wrap reveal">
+    <div class="how">
+      <div class="how-t">🍀 작성 방법, 딱 세 단계예요</div>
+      <p>아래 세 칸을 편하게 채워주세요. 다 적으시면 버튼 한 번으로 내용이 <b>자동으로 복사</b>돼요. 그다음 열리는 <b>카카오 채팅창에 붙여넣어</b> 주시면 제가 확인하고 안내드릴게요 🙂🙏🏻</p>
+      <div class="steps"><span><b>1</b> 아래 세 칸 작성하기</span><span><b>2</b> 버튼 누르기 <em>(자동 복사)</em></span><span><b>3</b> 카카오에 붙여넣기 <em>(길게 눌러 붙여넣기)</em></span></div>
+    </div>
+
+    <div class="fg">
+      <div class="fg-label"><span class="fg-num">01</span> 성함</div>
+      <div class="fg-help">편하게 불러드릴 이름이면 돼요.</div>
+      <input class="inp" id="f-name" type="text" placeholder="예) 홍길동" oninput="renderInquiry()">
+    </div>
+
+    <div class="fg">
+      <div class="fg-label"><span class="fg-num">02</span> 이번 촬영으로 어떤 ‘나’를 남기고 싶으세요?</div>
+      <div class="fg-help">maydly는 <b>‘나를 남기는’</b> 촬영이에요. 이번에 담고 싶은 나의 모습·순간을 편하게 적어주세요 🙂🙏🏻<br><span style="color:var(--tx3)">마음에 든 참고사진이 있다면 “이 사진처럼 ○○한 나” 이렇게 적어주셔도 좋아요.</span></div>
+      <textarea class="ta" id="f-keep" placeholder="예) 지금이 아니면 못 담을, 지금의 나 / 꾸민 모습 말고 편안한 진짜 나 / 화려하기보다 잔잔하고 담담한 느낌으로" oninput="renderInquiry()"></textarea>
+      <div class="ref-box">📷 시안에서 <b>관심 있게 보신 사진</b>, 원하는 분위기, <b>해보고 싶은 촬영 사진</b>이 있다면 — 버튼을 눌러 카카오로 넘어가신 뒤 <b>캡처해서 함께</b> 보내주시면 큰 도움이 돼요 🙂</div>
+    </div>
+
+    <div class="fg">
+      <div class="fg-label"><span class="fg-num">03</span> 인스타그램 계정</div>
+      <div class="fg-help">아래 <b>계정 아이디만</b> 적어주시면 돼요 (예: maydly_u). 비공개면 개인 사진 몇 장도 함께 부탁드려요.</div>
+      <div class="insta-group"><span class="insta-prefix">instagram.com/</span><input class="insta-handle" id="f-insta" type="text" placeholder="maydly_u" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="renderInquiry()"></div>
+    </div>
+
+    <div class="preview-cap">↓ 이 내용이 복사돼요 (카카오에 붙여넣기)</div>
+    <div class="preview" id="inquiry-preview"></div>
+
+    <div class="form-cta">
+      <p class="note" style="margin:0 0 16px">다 채우셨나요? 아래 버튼을 누르면 위 내용이 <b>자동으로 복사</b>돼요 🙂</p>
+      <a class="btn pri" href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" rel="noopener" onclick="copyInquiry()">작성내용 복사하고 카카오로 이동 🍀</a>
+      <p class="note" style="margin:16px 0 0">복사된 내용을 <b>카카오 채팅창에 붙여넣어</b> 주시면 접수 완료예요. 편하게 보내주시면 확인하고 안내드릴게요 🙂🍀</p>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="brand" style="display:flex; align-items:center; gap:6px;">maydly <svg class="clv" width="16" height="16" style="color:var(--accent)"><use href="#clover"/></svg></div>
+  <p style="max-width:340px; margin:0 auto 10px;">너를 담는 순간, 세상이 반하다 · mad about you</p>
+  <p><a href="https://instagram.com/maydly_u" target="_blank" rel="noopener">@maydly_u</a> · <a href="https://instagram.com/maydly_s" target="_blank" rel="noopener">@maydly_s</a> · <a href="https://instagram.com/maydly_f" target="_blank" rel="noopener">@maydly_f</a></p>
+</div></footer>
+
+<script>
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.1, rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  var nav=document.getElementById('nav');
+  addEventListener('scroll',function(){nav.classList.toggle('scr',scrollY>8);},{passive:true});
+  document.querySelectorAll('.acc .q').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var acc=btn.parentElement, a=acc.querySelector('.a'), open=acc.classList.contains('open');
+      if(open){acc.classList.remove('open'); a.style.maxHeight=null;}
+      else{acc.classList.add('open'); a.style.maxHeight=a.scrollHeight+'px';}
+    });
+  });
+</script>
+
+<div class="inquiry-toast" id="inquiry-toast"></div>
+
+<!-- 문의 폼 로직 (라이브 이식) -->
+<script>
+  (function(){
+    var KAKAO_CHAT = 'http://pf.kakao.com/_pxnxgbn/chat';
+    function val(id){ var el=document.getElementById(id); return el?(el.value||'').trim():''; }
+    function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function instaHandle(){
+      var h = val('f-insta');
+      if(!h) return '';
+      h = h.replace(/^https?:\/\/(www\.)?instagram\.com\//i,'');
+      h = h.replace(/^@+/,'').replace(/\/+$/,'').trim();
+      return h;
+    }
+    function instaUrl(){ var h = instaHandle(); return h ? 'https://www.instagram.com/' + h + '/' : ''; }
+    function buildMessage(){
+      var insta = instaUrl();
+      var lines = ['안녕하세요, maydly 문의드려요 :)'];
+      lines.push('· 성함 : ' + (val('f-name') || '(미입력)'));
+      lines.push('· 남기고 싶은 나 : ' + (val('f-keep') || '(미입력)'));
+      lines.push('· 인스타 : ' + (insta || '(미입력)'));
+      return lines.join('\n');
+    }
+    window.renderInquiry = function(){
+      function line(label, v){
+        if(v) return '· ' + label + ' : ' + esc(v);
+        return '<span class="muted">· ' + label + ' : (아직 안 적으셨어요)</span>';
+      }
+      var html = '안녕하세요, maydly 문의드려요 :)\n'
+        + line('성함', val('f-name')) + '\n'
+        + line('남기고 싶은 나', val('f-keep')) + '\n'
+        + line('인스타', instaUrl());
+      var p = document.getElementById('inquiry-preview');
+      if(p) p.innerHTML = html;
+    };
+    function toast(msg){
+      var t = document.getElementById('inquiry-toast');
+      if(!t) return;
+      t.innerHTML = msg; t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 3200);
+    }
+    function fallbackCopy(msg){
+      var ta = document.createElement('textarea');
+      ta.value = msg; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      toast(ok ? '✅ 복사됐어요! 카카오 채팅창에 붙여넣기 해주세요.'
+               : '카카오 채팅창이 열려요. 위 정리글을 복사해 붙여넣어 주세요.');
+    }
+    window.copyInquiry = function(){
+      var msg = buildMessage();
+      try{
+        if(window.saveInquiry && (val('f-name') || val('f-keep') || instaHandle())){
+          window.saveInquiry(val('f-name'), val('f-keep'), instaHandle());
+        }
+      }catch(e){}
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(msg).then(function(){
+          toast('✅ 문의 내용이 복사됐어요!<br>카카오 채팅창에 붙여넣기(길게 눌러 붙여넣기) 해주세요.');
+        }).catch(function(){ fallbackCopy(msg); });
+      } else { fallbackCopy(msg); }
+      return true;
+    };
+    renderInquiry();
+  })();
+</script>
+
+<!-- 설문데이터 저장 (Firestore, subin-routine) — 라이브 이식 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const app = initializeApp({ apiKey:"AIzaSyBfyRE7CNENjgSfe25xHAdr87gOllpYtvM", authDomain:"subin-routine.firebaseapp.com", projectId:"subin-routine" });
+  const db = getFirestore(app);
+  const COLLECTION = "maydly_inquiries_test"; // 기존 문의 누적 컬렉션(옛 라이브와 동일) — 260829 복귀
+  window.saveInquiry = function(name, keep, instaHandle){
+    return addDoc(collection(db, COLLECTION), {
+        name: name||"", keep: keep||"", insta: instaHandle||"",
+        status: "신규", source: "maydly_form", ts: serverTimestamp()
+      }).catch(function(){ /* 저장 실패해도 카카오 복사는 진행 */ });
+  };
+
+</script>
+<script type="module">/* 미리보기 전용: 문의를 실제로 저장하지 않는다 */window.saveInquiry=function(){console.info("[미리보기] 문의 저장 안 함");return Promise.resolve({id:"preview"});};</script>
+<!-- 미리보기: 조회 기록 스크립트 제거됨 -->
+<script id="mo-motion-js">
+/* ════════════════════════════════════════════════════════════════════
+   maydly 시안 · 등장 엔진 (브랜드-008 · 261005 · 2차)
+   - 기존 스크립트 4개(조회 기록·문의폼 포함)와 완전히 별개. 아무것도 덮어쓰거나 감싸지 않는다.
+   - 하는 일: 화면에 들어온 단위에 .mo-in 을 붙인다(움직임은 CSS 가 한다) · 읽기 진행 바 ·
+             웹 깊이(히어로 물러남·여백 클로버 시차) · 폰 히어로 흐려짐 · 첫 화면 밖 상시 움직임 멈춤
+   - 규칙: 한 번만 / 위→아래 시차는 묶음 사이에도 이어 붙여 «제목 → 그 아래 글» 순서 유지 /
+           빨리 스크롤하거나 늦게 발견되면 «압축 안무»(.mo-fast) / 아래가 켜지면 위쪽 건너뛴 것은 즉시(.mo-now) /
+           IO 무응답·오류·동작 줄이기 → html.mo 를 떼고, 이후 어떤 처리기도 다시 손대지 않는다(failed)
+   ════════════════════════════════════════════════════════════════════ */
+(function () {
+  var W = window, D = document, de = D.documentElement;
+  if (!de.classList.contains('mo')) return;              // 게이트가 안 열렸거나 이미 실패 처리 → 원래 페이지 그대로
+
+  var UNITS = [
+    'section .kicker', 'section h2.big', 'section p.pull',
+    'section .center > p.lead', 'section .center > p.note',
+    'section > .wrap > .body > p', 'section > .wrap > .callout-box', '#concept > .wrap > p.clicknote',
+    '#concept > .wrap > .concept-block', 'section .grid2 > .card', 'section .grid3 > .card',
+    '#notice .acc-list > .acc', '#process .flow > .f',
+    '#cta .form-wrap > .how', '#cta .form-wrap > .fg', '#cta .form-wrap > .preview-cap', '#cta .form-wrap > .preview', '#cta .form-wrap > .form-cta',
+    'footer > .wrap > *'
+  ].join(',');
+
+  /* 섹션 클로버 — 웹은 좌우 여백(넓은 화면만)에서 섹션마다 방향을 바꿔 시차, 폰은 모서리에 은은하게 */
+  var CLV_WEB = [
+    { id: 'direction', side: 'l', top: '24%', s: 74, r: -18, k: -0.07 },
+    { id: 'concept',   side: 'r', top: '7%',  s: 86, r: 22,  k: 0.08 },
+    { id: 'behind',    side: 'r', top: '22%', s: 66, r: -16, k: 0.07 },
+    { id: 'process',   side: 'l', top: '30%', s: 62, r: 14,  k: -0.06 },
+    { id: 'notice',    side: 'r', top: '18%', s: 70, r: -12, k: 0.07 },
+    { id: 'cta',       side: 'l', top: '9%',  s: 78, r: 20,  k: -0.07 }
+  ];
+  var CLV_PHONE = [
+    { id: 'core',    side: 'r', top: '12px', s: 42, r: 18,  k: 0 },
+    { id: 'concept', side: 'l', top: '12px', s: 40, r: -16, k: 0 },
+    { id: 'behind',  side: 'l', top: '12px', s: 40, r: -14, k: 0 },
+    { id: 'notice',  side: 'r', top: '12px', s: 38, r: 14,  k: 0 },
+    { id: 'cta',     side: 'r', top: '12px', s: 42, r: 12,  k: 0 }
+  ];
+  var PROF = {
+    phone: { s: 80,  maxStep: 3, introBase: 260, introStep: 80,  introMax: 240, vel: 2.5 },
+    web:   { s: 100, maxStep: 4, introBase: 380, introStep: 110, introMax: 330, vel: 5.0 }
+  };
+
+  var io = null, decoIO = null, heroIO = null, footIO = null, ro = null;
+  var failed = false, bar = null, heroWrap = null, heroGone = false, heroMax = 0, clovers = [], para = false, scrolled = false;
+  var units = [], sweepLow = 0, first = true, beat = false, normAt = 0, fastAt = 0;
+  var vh = W.innerHeight || de.clientHeight, maxScroll = 1;
+  var lastY = W.pageYOffset, lastT = 0, vel = 0, idleT = 0, ticking = false, anchorUntil = 0;
+  var mqPhone, mqPara, mqWide, mqReduce, P;
+
+  function failOpen() {                                     // 무엇이든 잘못되면: 연출을 접고 전부 보이게 — 이후 아무것도 다시 쓰지 않는다
+    if (failed) return; failed = true;
+    para = false;
+    try { if (io) io.disconnect(); if (decoIO) decoIO.disconnect(); if (heroIO) heroIO.disconnect(); if (footIO) footIO.disconnect(); if (ro) ro.disconnect(); } catch (e) {}
+    try { W.removeEventListener('scroll', onScroll); W.removeEventListener('resize', measure); } catch (e) {}
+    try { var hw = D.querySelector('.hero > .wrap'); if (hw) { hw.style.transform = ''; hw.style.opacity = ''; } } catch (e) {}
+    heroWrap = null;
+    try { if (bar && bar.parentNode) bar.parentNode.removeChild(bar); } catch (e) {}
+    try { for (var i = 0; i < clovers.length; i++) if (clovers[i].el.parentNode) clovers[i].el.parentNode.removeChild(clovers[i].el); } catch (e) {}
+    clovers = [];
+    de.classList.remove('mo', 'mo-ok', 'mo-hero-off', 'mo-foot-on', 'mo-scrolled');
+    try { clearTimeout(W.__moFail); clearTimeout(W.__moFail2); } catch (e) {}
+  }
+
+  function reveal(el, mode, delay) {
+    if (el.classList.contains('mo-in')) return;
+    if (mode) el.classList.add(mode);
+    if (delay > 0) el.style.setProperty('--mo-delay', Math.round(delay) + 'ms');
+    el.classList.add('mo-in');
+    if (io) { try { io.unobserve(el); } catch (e) {} }
+  }
+  function sweepAbove(k) {                                  // 아래가 켜졌으면 그 위 미발동은 움직임 없이 즉시
+    for (var j = sweepLow; j < k; j++) if (!units[j].classList.contains('mo-in')) reveal(units[j], 'mo-now', 0);
+    while (sweepLow < units.length && units[sweepLow].classList.contains('mo-in')) sweepLow++;
+  }
+  /* 순서 규칙 — 위 단위(제목 등)가 아직 출발 전이면 아래 단위는 그 뒤에 출발한다.
+     normAt = 마지막 «정상 등장» 출발 예정 시각(상한이 있어 멀리 밀리지 않는다)
+     fastAt = 마지막 «압축 등장» 출발 예정 시각 — 압축끼리는 아주 짧은 창 안에서만 잇는다.
+     압축 등장은 normAt 을 늘리지 않으므로, 앵커로 미끄러져 내려가며 지나친 수십 개가 대기열을 쌓지 않는다 */
+  function now_() { return W.performance ? performance.now() : Date.now(); }
+  function chainDelay(i) {
+    var now = now_(), want = now + Math.min(i, P.maxStep) * P.s;
+    if (normAt > now - 400) want = Math.max(want, normAt + P.s);
+    if (fastAt > now) want = Math.max(want, fastAt + 30);
+    want = Math.min(want, now + P.maxStep * P.s);
+    if (want > normAt) normAt = want;
+    return want - now;
+  }
+  function fastDelay(i) {
+    var now = now_(), want = now + Math.min(i, 2) * 40;
+    if (normAt > now) want = Math.max(want, normAt + 30);
+    if (fastAt > now && fastAt - now <= 120) want = Math.max(want, fastAt + 30);
+    want = Math.min(want, now + 430);
+    if (want > fastAt) fastAt = want;
+    return want - now;
+  }
+  function onIO(entries) {
+    if (failed) return;
+    try {
+      beat = true;
+      var h = W.innerHeight || de.clientHeight, ins = [], i;
+      for (i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (e.isIntersecting && !e.target.classList.contains('mo-in')) ins.push(e);
+      }
+      ins.sort(function (a, b) {                            // 화면 위→아래, 같은 줄이면 왼→오
+        var d = a.boundingClientRect.top - b.boundingClientRect.top;
+        return Math.abs(d) > 6 ? d : a.boundingClientRect.left - b.boundingClientRect.left;
+      });
+      /* 첫 응답: 맨 위(히어로가 보이는 중)면 히어로 시퀀스를 이어 받는 안무,
+         중간에서 열렸으면(새로고침 위치 복원·#notice 같은 바로가기·뒤로가기) 기다리게 하지 않고 압축 안무 */
+      var intro = first && W.pageYOffset < h * 0.3 && !anchorUntil;
+      var fast = vel > P.vel * h || now_() < anchorUntil;   // 메뉴·바로가기로 미끄러져 가는 중과 도착 지점 = 압축 안무
+      for (i = 0; i < ins.length; i++) {
+        var en = ins[i], el = en.target, top = en.boundingClientRect.top, mode = '', delay = 0;
+        if (intro) {
+          delay = P.introBase + Math.min(i * P.introStep, P.introMax);
+          if (top > h * 0.75) delay = Math.min(delay, P.introBase + P.introStep);
+        } else if (first || fast || top < h * 0.8) {
+          mode = 'mo-fast';
+          delay = fastDelay(i);                             // 압축 안무 — 그래도 위에서 대기 중인 것보다 먼저 출발하지 않는다
+        } else {
+          delay = chainDelay(i);
+        }
+        reveal(el, mode, delay);
+        sweepAbove(el.__moI);
+      }
+      if (ins.length) first = false;
+      else if (first && entries.length) first = false;
+    } catch (err) { failOpen(); }
+  }
+  function makeIO() {
+    if (failed) return;
+    if (io) io.disconnect();
+    io = new IntersectionObserver(onIO, { threshold: 0, rootMargin: '0px 0px 10px 0px' });  // 숨김=투명만 → IO 상자=실제 자리
+    for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in')) io.observe(units[i]);
+  }
+
+  function update(y) {
+    if (failed) return;
+    if (bar) bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, y / maxScroll)).toFixed(4) + ')';
+    var sc = y > 24;
+    if (sc !== scrolled) { scrolled = sc; de.classList.toggle('mo-scrolled', sc); }   // 스크롤 시작 → 스크롤 신호 끔
+    if (heroWrap) {
+      if (y < vh * 1.2) {
+        var r = y / vh;
+        if (para) {                                          // 웹: 스크롤보다 느리게 밀려나며 흐려짐(상한에 부드럽게 다가감)
+          var ty = heroMax > 0 ? heroMax * Math.tanh(y * 0.24 / heroMax) : 0;
+          heroWrap.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
+          heroWrap.style.opacity = Math.max(0, 1 - Math.max(0, r - 0.2) * 1.5).toFixed(3);
+        } else {                                             // 폰: 위치는 그대로(아이폰 떨림 없음), 흐려짐만
+          heroWrap.style.opacity = Math.max(0, 1 - Math.max(0, r - 0.3) * 1.6).toFixed(3);
+        }
+        heroGone = false;
+      } else if (!heroGone) { heroWrap.style.opacity = '0'; heroGone = true; }
+    }
+    if (!para) return;
+    for (var i = 0; i < clovers.length; i++) {               // 웹: 여백 클로버 시차(섹션마다 방향 교대)
+      var c = clovers[i]; if (!c.k) continue;
+      var off = (c.top - y - vh / 2) * c.k;
+      off = off > 90 ? 90 : (off < -90 ? -90 : off);
+      c.el.style.transform = 'translate3d(0,' + off.toFixed(1) + 'px,0)';
+    }
+  }
+  function frame(t) {
+    ticking = false;
+    if (failed) return;
+    try {
+      var y = W.pageYOffset;
+      if (lastT) { var dt = t - lastT; if (dt > 0) vel = vel * 0.5 + (Math.abs(y - lastY) / dt * 1000) * 0.5; }
+      lastY = y; lastT = t;
+      update(y);
+    } catch (e) { failOpen(); }
+  }
+  function onScroll() {                                      // passive + rAF 한 번 — 루프 안에선 scrollY 만 읽는다
+    clearTimeout(idleT); idleT = setTimeout(function () { vel = 0; lastT = 0; anchorUntil = 0; }, 120);
+    if (!ticking) { ticking = true; W.requestAnimationFrame(frame); }
+  }
+  function measure() {                                       // 위치 캐시 — 펼침·글꼴·폭 변화 때만
+    if (failed) return;
+    try {
+      vh = W.innerHeight || de.clientHeight;
+      maxScroll = Math.max(1, Math.max(de.scrollHeight, D.body.scrollHeight) - vh);
+      var y = W.pageYOffset;
+      if (heroWrap) heroMax = Math.max(0, heroWrap.parentNode.clientHeight - (heroWrap.offsetTop + heroWrap.offsetHeight) - 8);
+      for (var i = 0; i < clovers.length; i++) {
+        var c = clovers[i], sec = c.el.parentNode;
+        if (!sec) continue;
+        c.top = sec.getBoundingClientRect().top + y + c.el.offsetTop + c.el.offsetHeight / 2;
+      }
+      update(y);
+    } catch (e) { failOpen(); }
+  }
+
+  function setupDecor() {
+    if (failed) return;
+    for (var i = 0; i < clovers.length; i++) if (clovers[i].el.parentNode) clovers[i].el.parentNode.removeChild(clovers[i].el);
+    clovers = [];
+    if (decoIO) decoIO.disconnect();
+    para = mqPara.matches;
+    var conf = mqPhone.matches ? CLV_PHONE : (mqWide.matches ? CLV_WEB : []);
+    for (var n = 0; n < conf.length; n++) {
+      var cf = conf[n], sec = D.getElementById(cf.id);
+      if (!sec) continue;
+      var el = D.createElement('span');
+      el.className = 'mo-clv ' + cf.side;
+      el.setAttribute('aria-hidden', 'true');
+      el.style.top = cf.top;
+      el.style.setProperty('--s', cf.s + 'px');
+      el.style.setProperty('--r', cf.r + 'deg');
+      sec.appendChild(el);
+      clovers.push({ el: el, k: para ? cf.k : 0, top: 0 });
+    }
+    decoIO = new IntersectionObserver(function (es) {
+      for (var i = 0; i < es.length; i++) if (es[i].isIntersecting) { es[i].target.classList.add('mo-in'); decoIO.unobserve(es[i].target); }
+    }, { threshold: 0 });
+    for (var m = 0; m < clovers.length; m++) decoIO.observe(clovers[m].el);
+    var hw = D.querySelector('.hero > .wrap');
+    if (hw) { hw.style.transform = ''; hw.style.opacity = ''; }
+    heroWrap = hw;                                           // 웹=물러남+흐려짐, 폰=흐려짐만
+    heroGone = false;
+    measure();
+  }
+  function onChange(mq, fn) { try { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); } catch (e) {} }
+
+  try {
+    mqPhone  = W.matchMedia('(max-width: 820px)');
+    mqPara   = W.matchMedia('(min-width: 821px) and (hover: hover) and (pointer: fine)');
+    mqWide   = W.matchMedia('(min-width: 1100px)');
+    mqReduce = W.matchMedia('(prefers-reduced-motion: reduce)');
+    P = mqPhone.matches ? PROF.phone : PROF.web;
+
+    units = [].slice.call(D.querySelectorAll(UNITS));
+    for (var u = 0; u < units.length; u++) units[u].__moI = u;
+
+    bar = D.createElement('div');
+    bar.id = 'mo-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    D.body.appendChild(bar);
+
+    setupDecor();
+    makeIO();
+    W.addEventListener('scroll', onScroll, { passive: true });
+    W.addEventListener('resize', measure, { passive: true });
+    if (W.ResizeObserver) { ro = new ResizeObserver(function () { measure(); }); ro.observe(D.body); }
+    if (D.fonts && D.fonts.ready) D.fonts.ready.then(measure, function () {});
+
+    var hero = D.querySelector('.hero'), foot = D.querySelector('footer');
+    if (hero) {
+      heroIO = new IntersectionObserver(function (es) { if (!failed) de.classList.toggle('mo-hero-off', !es[es.length - 1].isIntersecting); });
+      heroIO.observe(hero);
+    }
+    if (foot) {
+      footIO = new IntersectionObserver(function (es) { if (!failed) de.classList.toggle('mo-foot-on', es[es.length - 1].isIntersecting); });
+      footIO.observe(foot);
+    }
+
+    onChange(mqPhone, function () { if (failed) return; P = mqPhone.matches ? PROF.phone : PROF.web; setupDecor(); makeIO(); });
+    onChange(mqPara, function () { if (!failed) setupDecor(); });
+    onChange(mqWide, function () { if (!failed) setupDecor(); });
+    onChange(mqReduce, function (e) { if (e.matches) failOpen(); });
+
+    /* 문의폼 입력 중엔 #cta 안을 움직이지 않는다(아이폰 커서 어긋남 방지) — 지금 입력하는 칸의 상자도 즉시 제자리 */
+    var cta = D.getElementById('cta');
+    if (cta) cta.addEventListener('focusin', function (ev) {
+      if (failed) return;
+      for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in') && cta.contains(units[i])) reveal(units[i], 'mo-now', 0);
+      var t = ev.target, own = t && t.closest ? t.closest('.mo-in') : null;
+      if (own) own.classList.add('mo-now');
+    });
+    /* 다른 앱(핀터레스트 등)에서 돌아왔을 때·뒤로가기 복원 — 화면 안·위쪽 미발동은 곧바로 */
+    var sweepVisible = function () {
+      if (failed) return;
+      try {
+        var h = W.innerHeight || de.clientHeight;
+        for (var i = 0; i < units.length; i++) {
+          var el = units[i]; if (el.classList.contains('mo-in')) continue;
+          var r = el.getBoundingClientRect();
+          if (r.top < h) reveal(el, r.bottom > 0 ? 'mo-fast' : 'mo-now', 0);
+        }
+      } catch (e) { failOpen(); }
+    };
+    W.addEventListener('pageshow', function (e) { if (e.persisted) sweepVisible(); });
+    D.addEventListener('visibilitychange', function () { if (D.visibilityState === 'visible') setTimeout(sweepVisible, 60); });
+    D.addEventListener('touchstart', function () {}, { passive: true });      // 아이폰에서 :active(눌림) 켜기
+    /* 메뉴·바로가기(#…) 이동 감지 — 링크 동작은 건드리지 않고 지켜보기만 한다. 미끄러져 멈출 때까지 압축 안무 */
+    var anchorMode = function () { anchorUntil = now_() + 2500; };
+    if (W.location.hash && W.location.hash.length > 1) anchorMode();
+    D.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (a) anchorMode();
+    }, true);
+    W.addEventListener('hashchange', anchorMode);
+
+    /* IO 가 있어도 안 도는 브라우저 대비 — 화면이 보이는 상태에서 1.5초 안에 첫 응답이 없으면 연출 해제 */
+    var arm = function () { setTimeout(function () { if (!beat) failOpen(); }, 1500); };
+    if (D.visibilityState !== 'hidden') arm();
+    else D.addEventListener('visibilitychange', function v() {
+      if (D.visibilityState !== 'hidden') { D.removeEventListener('visibilitychange', v); arm(); }
+    });
+
+    clearTimeout(W.__moFail); clearTimeout(W.__moFail2);
+    de.classList.add('mo-ok');
+  } catch (e) { failOpen(); }
+})();
+</script>
+
+<div style="position:fixed;left:10px;bottom:10px;z-index:9999;font:600 11px/1 -apple-system,system-ui,sans-serif;color:#fff;background:rgba(74,122,53,.82);padding:7px 10px;border-radius:999px;pointer-events:none;letter-spacing:.2px">모션 미리보기 · 실제 시안 아님</div>
+</body>
+</html>
