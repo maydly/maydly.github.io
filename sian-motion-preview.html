@@ -5,13 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script id="mo-gate">
-/* maydly 시안 · 모션 게이트 (브랜드-008) — head 맨 앞에서 한 번만 돈다.
+/* maydly 시안 · 모션 게이트 — head 맨 앞에서 한 번만 돈다.
    여기서 html.mo 를 붙여야만 «숨겼다가 보여주는» 연출이 켜진다.
    켜지지 않는 경우(=원래 페이지 그대로 다 보임):
      · IntersectionObserver 가 없는 옛 브라우저 → 원본 첫 스크립트가 예외로 죽지 않게 «빈 IO»만 깔아 둔다(펼침이 산다)
      · 「동작 줄이기」 설정
-     · 개별 transform(translate)·:is() 를 모르는 옛 엔진(iOS 14.1 미만 등) → 깜빡임 없이 원래 페이지
-   안전 타이머: 화면이 처음 그려진 뒤 2.5초 안에 본 스크립트가 mo-ok 를 못 붙이면 html.mo 를 떼어 전부 보이게 한다.
+     · 개별 transform(translate)·:is() 를 모르는 옛 엔진(iOS 14.5·사파리 14.1 미만, 파이어폭스 78 미만 등) → 깜빡임 없이 원래 페이지
+   안전 타이머: 첫 프레임 무렵부터 2.5초 안에 본 스크립트가 mo-ok 를 못 붙이면 html.mo 를 떼어 전부 보이게 한다.
    (글꼴 CSS 가 늦게 오는 동안엔 화면 자체가 안 그려지므로, 그 시간까지 세면 멀쩡한 기기에서도 연출이 꺼진다)
    10초 예비 타이머는 첫 그림조차 안 나오는 이상한 환경 대비. */
 (function (d, w) {
@@ -25,6 +25,7 @@
     }
     if (!mm || mm('(prefers-reduced-motion: reduce)').matches) return;
     if (!(w.CSS && w.CSS.supports && w.CSS.supports('translate', '0 1px'))) return;
+    try { if (!w.CSS.supports('selector(:is(a))')) return; } catch (e) { return; }
     de.classList.add('mo');
     var off = function () { if (!de.classList.contains('mo-ok')) de.classList.remove('mo'); };
     if (w.requestAnimationFrame) w.requestAnimationFrame(function () { w.__moFail = setTimeout(off, 2500); });
@@ -267,11 +268,10 @@
 </style>
 <style id="mo-motion">
 /* ════════════════════════════════════════════════════════════════════
-   maydly 시안 · 모션 레이어  (브랜드-008 · 261005)
+   maydly 시안 · 모션 레이어
    - 글자·색·순서는 그대로. 움직임만 얹는다.
    - 숨김·장식은 전부 html.mo 아래에서만 → 스크립트가 실패하면 원래 페이지가 그대로 보인다.
    - 폭 820px 이하 = «폰용»(짧고 단단하게, 세로로만), 그 위 = «웹용»(넓고 느긋하게, 깊이).
-   - 기준: 협업 안내서(운영-020) 모션 어휘 + 폰 공학 기준(R3) — /tmp/mo_work/R1~R3
    ════════════════════════════════════════════════════════════════════ */
 
 /* ① 원본 덩어리 리빌 무력화 — 조건 없이. 원본은 JS가 죽으면 글이 하나도 안 보였다 */
@@ -288,7 +288,7 @@
   --mo-fast:160ms; --mo-k:1;                      /* 짧은 페이드 / 내부 안무 지연 배율 */
   --mo-h1:110ms; --mo-hsub:300ms; --mo-hwho:380ms; --mo-hc:460ms; --mo-hcs:75ms;
   --mo-ghost:540px; --mo-cue-b:26px; --mo-cue-h:40px; --mo-cue-d:1500ms;
-  --mo-bar:2px; --mo-kl:4px; --mo-ring:1300ms;
+  --mo-bar:2px; --mo-kl:4px; --mo-ring:1300ms; --mo-acc-o:660ms; --mo-acc-d:900ms;
   --mo-fo:220ms; --mo-fd:380ms; --mo-fwd:450ms; --mo-fy:12px;   /* 빠른 스크롤·늦은 발견 = 압축 안무 */
   --mo-num:96px; --mo-num-t:12px; --mo-num-r:26px;
 }
@@ -302,7 +302,7 @@
     --mo-fast:140ms; --mo-k:.75;
     --mo-h1:120ms; --mo-hsub:340ms; --mo-hwho:420ms; --mo-hc:500ms; --mo-hcs:70ms;
     --mo-ghost:360px; --mo-cue-b:12px; --mo-cue-h:28px; --mo-cue-d:1300ms;
-    --mo-bar:2.5px; --mo-kl:0px; --mo-ring:1000ms;
+    --mo-bar:2.5px; --mo-kl:0px; --mo-ring:1000ms; --mo-acc-o:460ms; --mo-acc-d:740ms;
     --mo-fo:180ms; --mo-fd:320ms; --mo-fwd:380ms; --mo-fy:8px;
     --mo-num:64px; --mo-num-t:10px; --mo-num-r:14px;
   }
@@ -323,8 +323,8 @@
 @keyframes moClvIn  { from { opacity:0; scale:.7; } }
 @keyframes moUnveil { from { clip-path:inset(-24px -24px 100% -24px); } to { clip-path:inset(-24px); } }
 @keyframes moSpin   { to { rotate:360deg; } }
-@keyframes moFloat  { 0%,100% { rotate:-4deg; translate:0 0; } 50% { rotate:5deg; translate:0 -6px; } }
-@keyframes moSway   { 0%,100% { rotate:-7deg; } 50% { rotate:7deg; } }
+@keyframes moFloat  { 0%,100% { rotate:0deg; translate:0 0; } 28% { rotate:-4deg; translate:0 -2px; } 72% { rotate:5deg; translate:0 -6px; } }
+@keyframes moSway   { 0%,100% { rotate:0deg; } 25% { rotate:-7deg; } 75% { rotate:7deg; } }
 @keyframes moSheen  { from { translate:0 0; opacity:1; } to { translate:380% 0; opacity:1; } }
 @keyframes moRing   { from { opacity:.55; scale:1; } to { opacity:0; scale:1.14 1.45; } }
 @keyframes moDrop {
@@ -346,7 +346,7 @@
 }
 
 /* ④ 첫 화면(히어로) — 스크립트 없이 CSS만으로 «타이틀 시퀀스» */
-html.mo .hero > .wrap { position:relative; z-index:1; }
+html.mo .hero { isolation:isolate; }
 html.mo .hero .eyebrow { animation: moFade var(--mo-o) var(--mo-ease) 0ms backwards, moLiftS var(--mo-d) var(--mo-ease) 0ms backwards; }
 html.mo .hero h1 { animation: moFade calc(var(--mo-o) * .6) var(--mo-ease) var(--mo-h1) backwards,
                               moLiftS var(--mo-wd) var(--mo-out) var(--mo-h1) backwards,
@@ -363,22 +363,24 @@ html.mo .hero .checks .c::before { animation: moTick calc(var(--mo-d) * .8) var(
 html.mo .hero::before {
   content:''; position:absolute; left:50%; top:47%; width:var(--mo-ghost); height:var(--mo-ghost);
   margin:calc(var(--mo-ghost) / -2) 0 0 calc(var(--mo-ghost) / -2);
-  background:var(--accent); -webkit-mask:var(--mo-clover) center / contain no-repeat; mask:var(--mo-clover) center / contain no-repeat;
-  opacity:.045; z-index:0; pointer-events:none;
-  animation: moGhostIn 2400ms var(--mo-ease) 300ms backwards, moSpin 120s linear infinite;
+  background:var(--accent);
+  -webkit-mask-image:var(--mo-clover); mask-image:var(--mo-clover); -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-position:center; mask-position:center; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  opacity:.045; z-index:-1; pointer-events:none;
+  animation: moGhostIn 2400ms var(--mo-ease) 300ms backwards, moSpin 120s linear 1;
 }
 /* 스크롤 신호 — 글자 없이 선 하나가 위에서 자라 아래로 빠진다 */
 html.mo .hero::after {
   content:''; position:absolute; left:50%; bottom:var(--mo-cue-b); width:1px; height:var(--mo-cue-h); margin-left:-.5px;
   background:linear-gradient(180deg, var(--accent), transparent); opacity:0; z-index:1; pointer-events:none;
-  animation: moDrop 2.4s ease-in-out var(--mo-cue-d) infinite;
+  animation: moDrop 2.4s ease-in-out var(--mo-cue-d) 5;
 }
 html.mo.mo-scrolled .hero::after { animation:none; opacity:0; }
 /* 원래 있던 히어로 클로버 2개 — 피어난 뒤 숨 쉬듯 흔들림 */
-html.mo .hero .cwm { animation: moClvIn 1800ms var(--mo-ease) 350ms backwards, moFloat 7s ease-in-out 2200ms infinite; }
-html.mo .hero .cwm.b { animation: moClvIn 1800ms var(--mo-ease) 520ms backwards, moFloat 8.6s ease-in-out 3000ms infinite; }
+html.mo .hero .cwm { animation: moClvIn 1800ms var(--mo-ease) 350ms backwards, moFloat 7s ease-in-out 2200ms 3; }
+html.mo .hero .cwm.b { animation: moClvIn 1800ms var(--mo-ease) 520ms backwards, moFloat 8.6s ease-in-out 3000ms 3; }
 /* 로고 옆 클로버 — 줄기 밑동을 축으로 살랑 */
-html.mo .nav .brand .clv, html.mo footer .brand .clv { transform-origin:50% 85%; animation: moSway 7s ease-in-out 1200ms infinite; }
+html.mo .nav .brand .clv, html.mo footer .brand .clv { transform-origin:50% 85%; animation: moSway 7s ease-in-out 1200ms 3; }
 html.mo footer .brand .clv { animation-play-state:paused; }
 html.mo.mo-foot-on footer .brand .clv { animation-play-state:running; }
 html.mo.mo-hero-off .hero::before, html.mo.mo-hero-off .hero::after,
@@ -421,19 +423,20 @@ html.mo :is(section .center > p.lead, section .center > p.note, section > .wrap 
             #concept > .wrap > p.clicknote, #cta .form-wrap > .preview-cap, footer > .wrap > *).mo-in {
   animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
 
-/* 상자 — 떠오르며(웹은 살짝 자리 잡듯) */
-html.mo :is(section > .wrap > .callout-box, #cta .form-wrap > .how, #cta .form-wrap > .preview,
-            #cta .form-wrap > .form-cta, #cta .form-wrap > .fg).mo-in {
+/* 상자 — 떠오르며(웹은 살짝 자리 잡듯). ID 가 든 선택자와 섞지 않는다(우선순위가 섞이면 전용 규칙이 진다) */
+html.mo section > .wrap > .callout-box.mo-in {
+  animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
+html.mo #cta .form-wrap > :is(.how, .preview, .form-cta, .fg).mo-in {
   animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards; }
 @media (min-width:821px){
-  html.mo :is(section > .wrap > .callout-box, #cta .form-wrap > .how, #cta .form-wrap > .preview).mo-in {
-    animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
-               moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards; }
   /* 인용·안내 상자 — 위에서 아래로 펼쳐지듯(왼쪽 초록 세로선이 위에서 아래로 그어지는 느낌) */
   html.mo section > .wrap > .callout-box.mo-in {
     animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
                moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards,
                moUnveil var(--mo-d) var(--mo-out) calc(var(--mo-delay, 0ms) + 60ms) backwards; }
+  html.mo #cta .form-wrap > :is(.how, .preview).mo-in {
+    animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
+               moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards; }
 }
 
 /* 컨셉 블록 01~04 — 상자가 서고 → 번호가 톡 → 제목 → 버튼 → 펼침 순 */
@@ -464,7 +467,8 @@ html.mo #concept > .wrap > .concept-block.mo-in .pin-btn + .pin-btn::after {
 html.mo #concept > .wrap { counter-reset:mocb; }
 html.mo #concept > .wrap > .concept-block { counter-increment:mocb; position:relative; isolation:isolate; }
 html.mo #concept > .wrap > .concept-block::before {
-  content:counter(mocb, decimal-leading-zero); position:absolute; top:var(--mo-num-t); right:var(--mo-num-r);
+  content:counter(mocb, decimal-leading-zero); content:counter(mocb, decimal-leading-zero) / "";
+  position:absolute; top:var(--mo-num-t); right:var(--mo-num-r);
   font-family:'Noto Serif KR', serif; font-weight:600; font-size:var(--mo-num); line-height:.8; letter-spacing:-.05em;
   color:var(--accent); opacity:.06; z-index:-1; pointer-events:none; }
 html.mo #concept > .wrap > .concept-block.mo-in::before {
@@ -505,14 +509,14 @@ html.mo #cta .form-wrap > .form-cta.mo-in .btn.pri::after {
   animation: moRing var(--mo-ring) var(--mo-out) calc(var(--mo-delay, 0ms) + 650ms * var(--mo-k) + 250ms) 2 backwards; }
 
 /* 펼침 — 열리면 안쪽 글이 따라 떠오른다(원래 높이 전환은 그대로) */
-html.mo .acc .a .inner { transition: opacity calc(var(--mo-o) * 1.1) var(--mo-ease) .08s, translate var(--mo-d) var(--mo-ease) .08s; }
+html.mo .acc .a .inner { transition: opacity var(--mo-acc-o) var(--mo-ease) .08s, translate var(--mo-acc-d) var(--mo-ease) .08s; }
 html.mo .acc:not(.open) .a .inner { opacity:0; translate:0 10px; transition-duration:.18s, .18s; transition-delay:0s, 0s; }
 
 /* 입력칸 — 포커스되면 은은한 테두리 번짐 */
 html.mo :is(.inp, .ta) { transition: border-color .2s, box-shadow .35s var(--mo-ease); }
-html.mo :is(.inp, .ta):focus { box-shadow:0 0 0 4px rgba(63,125,87,.10); }
+html.mo :is(.inp, .ta):focus { box-shadow:0 0 0 4px rgba(63,125,87,.10); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent); }
 html.mo .insta-group { transition: border-color .2s, box-shadow .35s var(--mo-ease); }
-html.mo .insta-group:focus-within { box-shadow:0 0 0 4px rgba(63,125,87,.10); }
+html.mo .insta-group:focus-within { box-shadow:0 0 0 4px rgba(63,125,87,.10); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent); }
 
 /* 읽기 진행 바 — 화면 맨 위(nav 위·토스트 아래), width 가 아니라 scaleX 로 */
 html.mo #mo-progress { position:fixed; top:0; left:0; right:0; height:var(--mo-bar); z-index:50; pointer-events:none;
@@ -520,17 +524,18 @@ html.mo #mo-progress { position:fixed; top:0; left:0; right:0; height:var(--mo-b
 
 /* 섹션 클로버 — 웹은 좌우 여백에서 시차, 폰은 섹션 모서리에 작게 */
 html.mo .mo-clv { position:absolute; width:var(--s); height:var(--s); background:var(--accent);
-  -webkit-mask:var(--mo-clover) center / contain no-repeat; mask:var(--mo-clover) center / contain no-repeat;
-  opacity:.075; rotate:var(--r, 0deg); pointer-events:none; z-index:0; }
+  -webkit-mask-image:var(--mo-clover); mask-image:var(--mo-clover); -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-position:center; mask-position:center; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  opacity:.075; transform:rotate(var(--r, 0deg)); pointer-events:none; z-index:0; }
 html.mo .mo-clv:not(.mo-in) { opacity:0; }
 html.mo .mo-clv.mo-in { animation: moClvIn 1700ms var(--mo-ease) 150ms backwards; }
-html.mo .mo-clv.l { left:max(14px, calc(50% - 612px)); }
-html.mo .mo-clv.r { right:max(14px, calc(50% - 612px)); }
-@media (max-width:820px){ html.mo .mo-clv { opacity:.09; } html.mo .sec-panel > .mo-clv { opacity:.12; } html.mo .mo-clv.l { left:14px; } html.mo .mo-clv.r { right:14px; } }
+html.mo .mo-clv.l { left:max(24px, calc(50% - 612px)); }
+html.mo .mo-clv.r { right:max(24px, calc(50% - 612px)); }
+@media (max-width:820px){ html.mo .mo-clv { opacity:.09; } html.mo .sec-panel > .mo-clv.mo-in { opacity:.12; } html.mo .mo-clv.l { left:14px; } html.mo .mo-clv.r { right:14px; } }
 
 /* ⑥ 손끝 반응 — 웹은 마우스 올리면 들림, 폰은 누르면 살짝 눌림 */
 @media (hover:hover) and (pointer:fine){
-  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: all .2s, translate .45s var(--mo-ease); }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: background-color .2s, border-color .2s, box-shadow .2s, color .2s, transform .2s, translate .45s var(--mo-ease); }
   html.mo :is(.pin-btn, .sig-btn, .btn.pri):hover { translate:0 -2px; }
   html.mo section :is(.grid2, .grid3) > .card { position:relative; isolation:isolate; transition: translate .5s var(--mo-ease); }
   html.mo section :is(.grid2, .grid3) > .card::after { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:-1;
@@ -546,9 +551,9 @@ html.mo .mo-clv.r { right:max(14px, calc(50% - 612px)); }
 }
 @media (hover:none){
   html.mo :is(.pin-btn, .sig-btn, .btn.pri, .navcta, .acc .q) { -webkit-tap-highlight-color:transparent; }
-  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: all .2s, scale .2s var(--mo-out); }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri) { transition: background-color .2s, border-color .2s, box-shadow .2s, color .2s, transform .2s, scale .2s var(--mo-out); }
   html.mo .navcta { transition: scale .2s var(--mo-out); }
-  html.mo :is(.pin-btn, .sig-btn, .btn.pri):active { scale:.97; transition-duration:.2s, .09s; }
+  html.mo :is(.pin-btn, .sig-btn, .btn.pri):active { scale:.97; transition-duration:.2s, .2s, .2s, .2s, .2s, .09s; }
   html.mo .navcta:active { scale:.95; transition-duration:.09s; }
   html.mo .acc .q { transition: scale .2s var(--mo-out); }
   html.mo .acc .q:active { scale:.985; transition-duration:.09s; }
@@ -572,6 +577,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     #cta .form-wrap > .how, #cta .form-wrap > .fg, #cta .form-wrap > .preview-cap, #cta .form-wrap > .preview, #cta .form-wrap > .form-cta,
     footer > .wrap > *) { opacity:1 !important; }
   html.mo .acc .a .inner { transition:none !important; opacity:1 !important; translate:none !important; }
+  html.mo .hero > .wrap { transform:none !important; opacity:1 !important; }
 }
 
 /* ⑨ 인쇄(아이폰 공유→프린트·PDF 저장 포함) — 지나가지 않은 섹션도 전부 보이게 */
@@ -584,6 +590,8 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     #cta .form-wrap > .how, #cta .form-wrap > .fg, #cta .form-wrap > .preview-cap, #cta .form-wrap > .preview, #cta .form-wrap > .form-cta,
     footer > .wrap > *), html.mo .acc .a .inner { opacity:1 !important; animation:none !important; translate:none !important; }
   html.mo #mo-progress, html.mo .mo-clv, html.mo .hero::before, html.mo .hero::after { display:none !important; }
+  html.mo *, html.mo *::before, html.mo *::after { animation:none !important; }
+  html.mo .hero > .wrap { transform:none !important; opacity:1 !important; }
 }
 </style>
 </head>
@@ -971,7 +979,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
 <!-- 미리보기: 조회 기록 스크립트 제거됨 -->
 <script id="mo-motion-js">
 /* ════════════════════════════════════════════════════════════════════
-   maydly 시안 · 등장 엔진 (브랜드-008 · 261005 · 2차)
+   maydly 시안 · 등장 엔진
    - 기존 스크립트 4개(조회 기록·문의폼 포함)와 완전히 별개. 아무것도 덮어쓰거나 감싸지 않는다.
    - 하는 일: 화면에 들어온 단위에 .mo-in 을 붙인다(움직임은 CSS 가 한다) · 읽기 진행 바 ·
              웹 깊이(히어로 물러남·여백 클로버 시차) · 폰 히어로 흐려짐 · 첫 화면 밖 상시 움직임 멈춤
@@ -997,10 +1005,10 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
   var CLV_WEB = [
     { id: 'direction', side: 'l', top: '24%', s: 74, r: -18, k: -0.07 },
     { id: 'concept',   side: 'r', top: '7%',  s: 86, r: 22,  k: 0.08 },
-    { id: 'behind',    side: 'r', top: '22%', s: 66, r: -16, k: 0.07 },
-    { id: 'process',   side: 'l', top: '30%', s: 62, r: 14,  k: -0.06 },
-    { id: 'notice',    side: 'r', top: '18%', s: 70, r: -12, k: 0.07 },
-    { id: 'cta',       side: 'l', top: '9%',  s: 78, r: 20,  k: -0.07 }
+    { id: 'behind',    side: 'r', top: '22%', s: 66, r: -16, k: -0.07 },
+    { id: 'process',   side: 'l', top: '30%', s: 62, r: 14,  k: 0.06 },
+    { id: 'notice',    side: 'r', top: '18%', s: 70, r: -12, k: -0.07 },
+    { id: 'cta',       side: 'l', top: '9%',  s: 78, r: 20,  k: 0.07 }
   ];
   var CLV_PHONE = [
     { id: 'core',    side: 'r', top: '12px', s: 42, r: 18,  k: 0 },
@@ -1015,7 +1023,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
   };
 
   var io = null, decoIO = null, heroIO = null, footIO = null, ro = null;
-  var failed = false, bar = null, heroWrap = null, heroGone = false, heroMax = 0, clovers = [], para = false, scrolled = false;
+  var failed = false, bar = null, heroWrap = null, heroGone = false, heroMax = 0, heroEnd = 0, heroRest = true, clovers = [], para = false, scrolled = false;
   var units = [], sweepLow = 0, first = true, beat = false, normAt = 0, fastAt = 0;
   var vh = W.innerHeight || de.clientHeight, maxScroll = 1;
   var lastY = W.pageYOffset, lastT = 0, vel = 0, idleT = 0, ticking = false, anchorUntil = 0;
@@ -1115,24 +1123,27 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     var sc = y > 24;
     if (sc !== scrolled) { scrolled = sc; de.classList.toggle('mo-scrolled', sc); }   // 스크롤 시작 → 스크롤 신호 끔
     if (heroWrap) {
-      if (y < vh * 1.2) {
-        var r = y / vh;
-        if (para) {                                          // 웹: 스크롤보다 느리게 밀려나며 흐려짐(상한에 부드럽게 다가감)
+      if (y <= 0.5) {                                        // 맨 위: 인라인 흔적을 지워 원본과 똑같은 상태
+        if (!heroRest) { heroWrap.style.transform = ''; heroWrap.style.opacity = ''; heroRest = true; }
+        heroGone = false;
+      } else if (y < heroEnd + 60) {
+        /* 흐려짐은 히어로 글 묶음의 아래끝이 화면 위로 빠져나가는 지점(heroEnd)에서 0이 된다 —
+           화면에 아직 보이는 글이 미리 투명해지지 않게(가로 화면·큰 글자·인앱 상하단 바 대비) */
+        var fs = heroEnd * 0.35, op = 1 - Math.max(0, Math.min(1, (y - fs) / Math.max(1, heroEnd - fs)));
+        if (para) {                                          // 웹: 스크롤보다 느리게 밀려나며(상한에 부드럽게) 흐려짐
           var ty = heroMax > 0 ? heroMax * Math.tanh(y * 0.24 / heroMax) : 0;
           heroWrap.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
-          heroWrap.style.opacity = Math.max(0, 1 - Math.max(0, r - 0.2) * 1.5).toFixed(3);
-        } else {                                             // 폰: 위치는 그대로(아이폰 떨림 없음), 흐려짐만
-          heroWrap.style.opacity = Math.max(0, 1 - Math.max(0, r - 0.3) * 1.6).toFixed(3);
-        }
-        heroGone = false;
-      } else if (!heroGone) { heroWrap.style.opacity = '0'; heroGone = true; }
+        }                                                    // 폰: 위치는 그대로(아이폰 떨림 없음), 흐려짐만
+        heroWrap.style.opacity = op.toFixed(3);
+        heroRest = false; heroGone = false;
+      } else if (!heroGone) { heroWrap.style.opacity = '0'; heroGone = true; heroRest = false; }
     }
     if (!para) return;
     for (var i = 0; i < clovers.length; i++) {               // 웹: 여백 클로버 시차(섹션마다 방향 교대)
       var c = clovers[i]; if (!c.k) continue;
       var off = (c.top - y - vh / 2) * c.k;
       off = off > 90 ? 90 : (off < -90 ? -90 : off);
-      c.el.style.transform = 'translate3d(0,' + off.toFixed(1) + 'px,0)';
+      c.el.style.transform = 'translate3d(0,' + off.toFixed(1) + 'px,0) rotate(' + c.r + 'deg)';
     }
   }
   function frame(t) {
@@ -1155,7 +1166,10 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       vh = W.innerHeight || de.clientHeight;
       maxScroll = Math.max(1, Math.max(de.scrollHeight, D.body.scrollHeight) - vh);
       var y = W.pageYOffset;
-      if (heroWrap) heroMax = Math.max(0, heroWrap.parentNode.clientHeight - (heroWrap.offsetTop + heroWrap.offsetHeight) - 8);
+      if (heroWrap) {
+        heroMax = Math.max(0, heroWrap.parentNode.clientHeight - (heroWrap.offsetTop + heroWrap.offsetHeight) - 8);
+        heroEnd = heroWrap.parentNode.getBoundingClientRect().top + y + heroWrap.offsetTop + heroWrap.offsetHeight + (para ? heroMax : 0);
+      }
       for (var i = 0; i < clovers.length; i++) {
         var c = clovers[i], sec = c.el.parentNode;
         if (!sec) continue;
@@ -1182,7 +1196,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       el.style.setProperty('--s', cf.s + 'px');
       el.style.setProperty('--r', cf.r + 'deg');
       sec.appendChild(el);
-      clovers.push({ el: el, k: para ? cf.k : 0, top: 0 });
+      clovers.push({ el: el, k: para ? cf.k : 0, r: cf.r, top: 0 });
     }
     decoIO = new IntersectionObserver(function (es) {
       for (var i = 0; i < es.length; i++) if (es[i].isIntersecting) { es[i].target.classList.add('mo-in'); decoIO.unobserve(es[i].target); }
@@ -1191,7 +1205,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     var hw = D.querySelector('.hero > .wrap');
     if (hw) { hw.style.transform = ''; hw.style.opacity = ''; }
     heroWrap = hw;                                           // 웹=물러남+흐려짐, 폰=흐려짐만
-    heroGone = false;
+    heroGone = false; heroRest = true;
     measure();
   }
   function onChange(mq, fn) { try { if (mq.addEventListener) mq.addEventListener('change', fn); else mq.addListener(fn); } catch (e) {} }
@@ -1201,6 +1215,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     mqPara   = W.matchMedia('(min-width: 821px) and (hover: hover) and (pointer: fine)');
     mqWide   = W.matchMedia('(min-width: 1100px)');
     mqReduce = W.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mqReduce.matches) { failOpen(); return; }
     P = mqPhone.matches ? PROF.phone : PROF.web;
 
     units = [].slice.call(D.querySelectorAll(UNITS));
@@ -1228,19 +1243,27 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       footIO.observe(foot);
     }
 
-    onChange(mqPhone, function () { if (failed) return; P = mqPhone.matches ? PROF.phone : PROF.web; setupDecor(); makeIO(); });
-    onChange(mqPara, function () { if (!failed) setupDecor(); });
-    onChange(mqWide, function () { if (!failed) setupDecor(); });
+    onChange(mqPhone, function () {
+      if (failed) return;
+      try { P = mqPhone.matches ? PROF.phone : PROF.web; setupDecor(); beat = false; makeIO(); arm(); } catch (e) { failOpen(); }
+    });
+    onChange(mqPara, function () { if (failed) return; try { setupDecor(); } catch (e) { failOpen(); } });
+    onChange(mqWide, function () { if (failed) return; try { setupDecor(); } catch (e) { failOpen(); } });
     onChange(mqReduce, function (e) { if (e.matches) failOpen(); });
 
-    /* 문의폼 입력 중엔 #cta 안을 움직이지 않는다(아이폰 커서 어긋남 방지) — 지금 입력하는 칸의 상자도 즉시 제자리 */
+    /* 키보드·입력 포커스가 들어간 단위는 즉시 제자리에(투명한 버튼에 포커스가 가지 않게).
+       문의폼에선 입력 중 #cta 안을 아예 움직이지 않는다(아이폰 커서 어긋남 방지) */
     var cta = D.getElementById('cta');
-    if (cta) cta.addEventListener('focusin', function (ev) {
+    D.addEventListener('focusin', function (ev) {
       if (failed) return;
-      for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in') && cta.contains(units[i])) reveal(units[i], 'mo-now', 0);
-      var t = ev.target, own = t && t.closest ? t.closest('.mo-in') : null;
-      if (own) own.classList.add('mo-now');
-    });
+      try {
+        var t = ev.target, u = t;
+        while (u && u !== D.body && u.__moI === undefined) u = u.parentNode;
+        if (u && u.__moI !== undefined) { if (!u.classList.contains('mo-in')) reveal(u, 'mo-now', 0); else u.classList.add('mo-now'); sweepAbove(u.__moI); }
+        if (cta && t && cta.contains(t))
+          for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in') && cta.contains(units[i])) reveal(units[i], 'mo-now', 0);
+      } catch (e) { failOpen(); }
+    }, true);
     /* 다른 앱(핀터레스트 등)에서 돌아왔을 때·뒤로가기 복원 — 화면 안·위쪽 미발동은 곧바로 */
     var sweepVisible = function () {
       if (failed) return;
@@ -1253,8 +1276,8 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
         }
       } catch (e) { failOpen(); }
     };
-    W.addEventListener('pageshow', function (e) { if (e.persisted) sweepVisible(); });
-    D.addEventListener('visibilitychange', function () { if (D.visibilityState === 'visible') setTimeout(sweepVisible, 60); });
+    W.addEventListener('pageshow', function (e) { if (e.persisted) { measure(); sweepVisible(); } });
+    D.addEventListener('visibilitychange', function () { if (D.visibilityState === 'visible') setTimeout(function () { measure(); sweepVisible(); }, 60); });
     D.addEventListener('touchstart', function () {}, { passive: true });      // 아이폰에서 :active(눌림) 켜기
     /* 메뉴·바로가기(#…) 이동 감지 — 링크 동작은 건드리지 않고 지켜보기만 한다. 미끄러져 멈출 때까지 압축 안무 */
     var anchorMode = function () { anchorUntil = now_() + 2500; };
@@ -1266,7 +1289,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     W.addEventListener('hashchange', anchorMode);
 
     /* IO 가 있어도 안 도는 브라우저 대비 — 화면이 보이는 상태에서 1.5초 안에 첫 응답이 없으면 연출 해제 */
-    var arm = function () { setTimeout(function () { if (!beat) failOpen(); }, 1500); };
+    function arm() { setTimeout(function () { if (!beat && !failed) failOpen(); }, 1500); }
     if (D.visibilityState !== 'hidden') arm();
     else D.addEventListener('visibilitychange', function v() {
       if (D.visibilityState !== 'hidden') { D.removeEventListener('visibilitychange', v); arm(); }
