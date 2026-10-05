@@ -1076,11 +1076,15 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
   }
 
   /* 화면 한가운데에 걸린 섹션을 '지금 보는 곳'으로 본다 */
+  /* 화면 한가운데 가로선이 «걸쳐 있는» 섹션을 '지금 보는 곳'으로 본다.
+     (261005 고침 — 예전엔 «섹션 상자 중심이 화면 중앙에 가장 가까운 것»이라, 긴 섹션 윗부분을 읽는 동안
+      바로 위의 짧은 섹션으로 시간이 붙었다.) 가운데 선이 어느 섹션에도 안 걸치면(맨 위 히어로 등) 가장 가까운 섹션 */
   function current(){
     var mid = innerHeight/2, best = -1, bestD = 1e9;
     for(var i=0;i<els.length;i++){
       var el = els[i]; if(!el) continue;
       var r = el.getBoundingClientRect();
+      if(r.top <= mid && r.bottom > mid) return i;
       if(r.bottom < 0 || r.top > innerHeight) continue;
       var d = Math.abs((r.top + r.bottom)/2 - mid);
       if(d < bestD){ bestD = d; best = i; }
@@ -1119,10 +1123,20 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
   Array.prototype.forEach.call(document.querySelectorAll('#cta input, #cta textarea'), function(el){
     el.addEventListener('input', function(){ if(form !== 'submitted') form = 'typed'; }, { once:true });
   });
-  var _save = window.saveInquiry;
-  if(typeof _save === 'function'){
-    window.saveInquiry = function(){ form = 'submitted'; return _save.apply(this, arguments); };
+  /* 문의 저장 함수(window.saveInquiry)는 모듈 스크립트라 이 스크립트보다 «나중에» 생긴다.
+     (261005 고침 — 예전엔 여기서 곧바로 감싸려다 함수가 아직 없어 아무것도 안 붙었고, «실제로 냄»이 늘 0이었다.)
+     지금·문서 해석 직후(모듈 실행 뒤)·load 때 세 번 시도해서 한 번만 감싼다.
+     냈을 때는 마지막 전송 이후 시간이 안 흘렀어도 다음 전송에 «냈음»이 실리도록 기준을 푼다. */
+  function hookSave(){
+    var _save = window.saveInquiry;
+    if(typeof _save !== 'function' || _save.__mvHooked) return;
+    var wrapped = function(){ form = 'submitted'; lastSentAlive = -1; return _save.apply(this, arguments); };
+    wrapped.__mvHooked = true;
+    window.saveInquiry = wrapped;
   }
+  hookSave();
+  document.addEventListener('DOMContentLoaded', hookSave);
+  addEventListener('load', hookSave);
 
   /* 저장 — Firestore SDK 대신 REST + keepalive 로 보낸다.
      떠나는 순간 SDK 쓰기는 브라우저가 연결을 끊어 자주 유실된다.
