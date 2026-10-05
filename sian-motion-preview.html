@@ -280,6 +280,7 @@
 /* ② 웹/폰 수치 — 폭으로 자동 전환 */
 :root{
   --mo-clover:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='%23000'%3E%3Cpath d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(90 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(180 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3Cpath transform='rotate(270 20 20)' d='M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z'/%3E%3C/g%3E%3C/svg%3E");
+  --mo-dir:1;                                     /* 등장 방향 — 올라가며 위에서 들어온 단위(.mo-up)는 -1 */
   --mo-ease:cubic-bezier(.22,.68,.16,1);          /* 페이드·떠오르기 */
   --mo-out:cubic-bezier(.16,1,.3,1);              /* 와이프·튀어나오기·미끄러지기 */
   --mo-y:26px;  --mo-ys:12px;  --mo-yb:34px;      /* 본문 / 라벨·작은 것 / 큰 상자 */
@@ -310,10 +311,10 @@
 
 /* ③ 동작 어휘 — 끝 상태는 요소 원래 모습(backwards 채움 → 끝나면 흔적 없음) */
 @keyframes moFade   { from { opacity:0; } }
-@keyframes moLift   { from { translate:0 var(--mo-y); } }
-@keyframes moLiftS  { from { translate:0 var(--mo-ys); } }
-@keyframes moLiftB  { from { translate:0 var(--mo-yb); } }
-@keyframes moSide   { from { translate:var(--mo-sx, 0px) var(--mo-cy); } }
+@keyframes moLift   { from { translate:0 calc(var(--mo-y) * var(--mo-dir, 1)); } }
+@keyframes moLiftS  { from { translate:0 calc(var(--mo-ys) * var(--mo-dir, 1)); } }
+@keyframes moLiftB  { from { translate:0 calc(var(--mo-yb) * var(--mo-dir, 1)); } }
+@keyframes moSide   { from { translate:var(--mo-sx, 0px) calc(var(--mo-cy) * var(--mo-dir, 1)); } }
 @keyframes moSettle { from { scale:.985; } }
 @keyframes moPop    { from { opacity:0; scale:.55; } }
 @keyframes moTick   { from { opacity:0; scale:.2; } }
@@ -322,6 +323,7 @@
 @keyframes moGhostIn{ from { opacity:0; scale:.9; } }
 @keyframes moClvIn  { from { opacity:0; scale:.7; } }
 @keyframes moUnveil { from { clip-path:inset(-24px -24px 100% -24px); } to { clip-path:inset(-24px); } }
+@keyframes moUnveilUp { from { clip-path:inset(100% -24px -24px -24px); } to { clip-path:inset(-24px); } }
 @keyframes moSpin   { to { rotate:360deg; } }
 @keyframes moFloat  { 0%,100% { rotate:0deg; translate:0 0; } 28% { rotate:-4deg; translate:0 -2px; } 72% { rotate:5deg; translate:0 -6px; } }
 @keyframes moSway   { 0%,100% { rotate:0deg; } 25% { rotate:-7deg; } 75% { rotate:7deg; } }
@@ -343,6 +345,18 @@
                  mask-image:linear-gradient(180deg,#000 0,#000 46%,transparent 52%,transparent 100%);
          -webkit-mask-size:100% 260%; mask-size:100% 260%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
          -webkit-mask-position:0 0; mask-position:0 0; }
+}
+
+/* 올라가며 위에서 들어온 제목은 아래에서 위로 번진다(보이는 쪽부터) */
+@keyframes moWipeUp {
+  from { -webkit-mask-image:linear-gradient(0deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+                 mask-image:linear-gradient(0deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+         -webkit-mask-size:100% 260%; mask-size:100% 260%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+         -webkit-mask-position:0 0; mask-position:0 0; }
+  to   { -webkit-mask-image:linear-gradient(0deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+                 mask-image:linear-gradient(0deg,#000 0,#000 46%,transparent 52%,transparent 100%);
+         -webkit-mask-size:100% 260%; mask-size:100% 260%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+         -webkit-mask-position:0 100%; mask-position:0 100%; }
 }
 
 /* ④ 첫 화면(히어로) — 스크립트 없이 CSS만으로 «타이틀 시퀀스» */
@@ -418,6 +432,9 @@ html.mo :is(section h2.big, section p.pull).mo-in {
              moLiftS var(--mo-wd) var(--mo-out) var(--mo-delay, 0ms) backwards,
              moWipe var(--mo-wd) var(--mo-out) var(--mo-delay, 0ms) backwards; }
 
+html.mo .mo-in.mo-up { --mo-dir:-1; }
+html.mo :is(section h2.big, section p.pull).mo-in.mo-up { animation-name: moFade, moLiftS, moWipeUp; }
+
 /* 본문 — 같이 들어온 묶음 안에서 위→아래 시차 */
 html.mo :is(section .center > p.lead, section .center > p.note, section > .wrap > .body > p,
             #concept > .wrap > p.clicknote, #cta .form-wrap > .preview-cap, footer > .wrap > *).mo-in {
@@ -437,6 +454,7 @@ html.mo #cta .form-wrap > :is(.how, .preview, .form-cta, .fg).mo-in {
   html.mo #cta .form-wrap > :is(.how, .preview).mo-in {
     animation: moFade var(--mo-o) var(--mo-ease) var(--mo-delay, 0ms) backwards, moLift var(--mo-d) var(--mo-ease) var(--mo-delay, 0ms) backwards,
                moSettle var(--mo-d) var(--mo-out) var(--mo-delay, 0ms) backwards; }
+  html.mo section > .wrap > .callout-box.mo-in.mo-up { animation-name: moFade, moLift, moSettle, moUnveilUp; }
 }
 
 /* 컨셉 블록 01~04 — 상자가 서고 → 번호가 톡 → 제목 → 버튼 → 펼침 순 */
@@ -493,6 +511,7 @@ html.mo #process .flow > .f.mo-in {
 html.mo #process .flow > .f.mo-in .fn {
   animation: moPop calc(var(--mo-d) * .9) var(--mo-out) calc(var(--mo-delay, 0ms) + 70ms * var(--mo-k)) backwards; }
 html.mo #process .flow > .f:not(:last-child)::before { transform-origin:50% 0; }
+html.mo #process .flow > .f.mo-up:not(:last-child)::before { transform-origin:50% 100%; }
 html.mo #process .flow > .f.mo-in:not(:last-child)::before {
   animation: moDrawY calc(var(--mo-d) * 1.2) var(--mo-ease) calc(var(--mo-delay, 0ms) + 160ms * var(--mo-k)) backwards; }
 
@@ -983,8 +1002,10 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
    - 기존 스크립트 4개(조회 기록·문의폼 포함)와 완전히 별개. 아무것도 덮어쓰거나 감싸지 않는다.
    - 하는 일: 화면에 들어온 단위에 .mo-in 을 붙인다(움직임은 CSS 가 한다) · 읽기 진행 바 ·
              웹 깊이(히어로 물러남·여백 클로버 시차) · 폰 히어로 흐려짐 · 첫 화면 밖 상시 움직임 멈춤
-   - 규칙: 한 번만 / 위→아래 시차는 묶음 사이에도 이어 붙여 «제목 → 그 아래 글» 순서 유지 /
-           빨리 스크롤하거나 늦게 발견되면 «압축 안무»(.mo-fast) / 아래가 켜지면 위쪽 건너뛴 것은 즉시(.mo-now) /
+   - 규칙: 내려갈 때와 올라갈 때 똑같이 등장한다(올라갈 땐 위에서 들어오므로 움직임 방향만 거울로, .mo-up) /
+           화면에서 1/4 이상 벗어나면 조용히 다시 숨겨 두었다가 돌아오면 다시 등장(바로 위 몇 줄 다시 읽기엔 안 깜빡임) /
+           시차는 묶음 사이에도 이어 붙여 «들어온 쪽에서 가까운 것부터» 순서 유지 /
+           빨리 스크롤하거나 늦게 발견되면 «압축 안무»(.mo-fast) /
            IO 무응답·오류·동작 줄이기 → html.mo 를 떼고, 이후 어떤 처리기도 다시 손대지 않는다(failed)
    ════════════════════════════════════════════════════════════════════ */
 (function () {
@@ -1022,9 +1043,9 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     web:   { s: 100, maxStep: 4, introBase: 380, introStep: 110, introMax: 330, vel: 5.0 }
   };
 
-  var io = null, decoIO = null, heroIO = null, footIO = null, ro = null;
+  var io = null, exitIO = null, heroIO = null, footIO = null, ro = null;
   var failed = false, bar = null, heroWrap = null, heroGone = false, heroMax = 0, heroEnd = 0, heroRest = true, clovers = [], para = false, scrolled = false;
-  var units = [], sweepLow = 0, first = true, beat = false, normAt = 0, fastAt = 0;
+  var units = [], first = true, beat = false, normAt = 0, fastAt = 0;
   var vh = W.innerHeight || de.clientHeight, maxScroll = 1;
   var lastY = W.pageYOffset, lastT = 0, vel = 0, idleT = 0, ticking = false, anchorUntil = 0;
   var mqPhone, mqPara, mqWide, mqReduce, P;
@@ -1032,7 +1053,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
   function failOpen() {                                     // 무엇이든 잘못되면: 연출을 접고 전부 보이게 — 이후 아무것도 다시 쓰지 않는다
     if (failed) return; failed = true;
     para = false;
-    try { if (io) io.disconnect(); if (decoIO) decoIO.disconnect(); if (heroIO) heroIO.disconnect(); if (footIO) footIO.disconnect(); if (ro) ro.disconnect(); } catch (e) {}
+    try { if (io) io.disconnect(); if (exitIO) exitIO.disconnect(); if (heroIO) heroIO.disconnect(); if (footIO) footIO.disconnect(); if (ro) ro.disconnect(); } catch (e) {}
     try { W.removeEventListener('scroll', onScroll); W.removeEventListener('resize', measure); } catch (e) {}
     try { var hw = D.querySelector('.hero > .wrap'); if (hw) { hw.style.transform = ''; hw.style.opacity = ''; } } catch (e) {}
     heroWrap = null;
@@ -1043,16 +1064,17 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     try { clearTimeout(W.__moFail); clearTimeout(W.__moFail2); } catch (e) {}
   }
 
-  function reveal(el, mode, delay) {
+  function reveal(el, mode, delay, up) {
     if (el.classList.contains('mo-in')) return;
     if (mode) el.classList.add(mode);
+    if (up) el.classList.add('mo-up');                      // 위에서 들어옴 → 움직임 방향 거울
     if (delay > 0) el.style.setProperty('--mo-delay', Math.round(delay) + 'ms');
     el.classList.add('mo-in');
-    if (io) { try { io.unobserve(el); } catch (e) {} }
   }
-  function sweepAbove(k) {                                  // 아래가 켜졌으면 그 위 미발동은 움직임 없이 즉시
-    for (var j = sweepLow; j < k; j++) if (!units[j].classList.contains('mo-in')) reveal(units[j], 'mo-now', 0);
-    while (sweepLow < units.length && units[sweepLow].classList.contains('mo-in')) sweepLow++;
+  function conceal(el) {                                    // 화면에서 충분히 멀어진 단위 — 다음에 들어올 때 다시 등장하도록 원상태로
+    if (!el.classList.contains('mo-in')) return;
+    el.classList.remove('mo-in', 'mo-fast', 'mo-now', 'mo-up');
+    el.style.removeProperty('--mo-delay');
   }
   /* 순서 규칙 — 위 단위(제목 등)가 아직 출발 전이면 아래 단위는 그 뒤에 출발한다.
      normAt = 마지막 «정상 등장» 출발 예정 시각(상한이 있어 멀리 밀리지 않는다)
@@ -1075,17 +1097,21 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
     if (want > fastAt) fastAt = want;
     return want - now;
   }
-  function onIO(entries) {
+  function onIO(entries) {                                  // 들어올 때 — 화면(+10px)에 닿는 순간
     if (failed) return;
     try {
       beat = true;
       var h = W.innerHeight || de.clientHeight, ins = [], i;
       for (i = 0; i < entries.length; i++) {
         var e = entries[i];
-        if (e.isIntersecting && !e.target.classList.contains('mo-in')) ins.push(e);
+        if (!e.isIntersecting) continue;
+        if (e.target.__moDeco) { e.target.classList.add('mo-in'); continue; }   // 섹션 클로버
+        if (!e.target.classList.contains('mo-in')) ins.push(e);
       }
-      ins.sort(function (a, b) {                            // 화면 위→아래, 같은 줄이면 왼→오
-        var d = a.boundingClientRect.top - b.boundingClientRect.top;
+      /* 들어온 쪽에서 가까운(=더 많이 보이는) 것부터: 아래에서 들어오면 위→아래, 위에서 들어오면 아래→위 */
+      var key = function (en) { var r = en.boundingClientRect; return (r.top + r.bottom) / 2 < h / 2 ? -r.bottom : r.top; };
+      ins.sort(function (a, b) {
+        var d = key(a) - key(b);
         return Math.abs(d) > 6 ? d : a.boundingClientRect.left - b.boundingClientRect.left;
       });
       /* 첫 응답: 맨 위(히어로가 보이는 중)면 히어로 시퀀스를 이어 받는 안무,
@@ -1093,28 +1119,44 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       var intro = first && W.pageYOffset < h * 0.3 && !anchorUntil;
       var fast = vel > P.vel * h || now_() < anchorUntil;   // 메뉴·바로가기로 미끄러져 가는 중과 도착 지점 = 압축 안무
       for (i = 0; i < ins.length; i++) {
-        var en = ins[i], el = en.target, top = en.boundingClientRect.top, mode = '', delay = 0;
+        var en = ins[i], el = en.target, r = en.boundingClientRect, mode = '', delay = 0;
+        var up = !intro && (r.top + r.bottom) / 2 < h / 2;   // 위에서 들어옴(올라가는 중)
+        /* 가장자리에서 막 들어온 게 아니라 화면 한가운데서 «늦게 발견»된 것(펼침 닫힘·순간 이동 등) */
+        var late = up ? r.bottom > h * 0.2 + 10 : r.top < h * 0.8 - 10;
         if (intro) {
           delay = P.introBase + Math.min(i * P.introStep, P.introMax);
-          if (top > h * 0.75) delay = Math.min(delay, P.introBase + P.introStep);
-        } else if (first || fast || top < h * 0.8) {
+          if (r.top > h * 0.75) delay = Math.min(delay, P.introBase + P.introStep);
+        } else if (first || fast || late) {
           mode = 'mo-fast';
-          delay = fastDelay(i);                             // 압축 안무 — 그래도 위에서 대기 중인 것보다 먼저 출발하지 않는다
+          delay = fastDelay(i);                             // 압축 안무 — 그래도 대기 중인 것보다 먼저 출발하지 않는다
         } else {
           delay = chainDelay(i);
         }
-        reveal(el, mode, delay);
-        sweepAbove(el.__moI);
+        reveal(el, mode, delay, up);
       }
-      if (ins.length) first = false;
-      else if (first && entries.length) first = false;
+      if (entries.length) first = false;
     } catch (err) { failOpen(); }
   }
+  function onExit(entries) {                                // 나갈 때 — 화면 위·아래로 1/4 화면 넘게 멀어지면
+    if (failed) return;
+    try {
+      for (var i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (e.isIntersecting) continue;
+        if (e.target.__moDeco) e.target.classList.remove('mo-in');
+        else conceal(e.target);
+      }
+    } catch (err) { failOpen(); }
+  }
+  function observeAll(el) { if (io) io.observe(el); if (exitIO) exitIO.observe(el); }
   function makeIO() {
     if (failed) return;
     if (io) io.disconnect();
-    io = new IntersectionObserver(onIO, { threshold: 0, rootMargin: '0px 0px 10px 0px' });  // 숨김=투명만 → IO 상자=실제 자리
-    for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in')) io.observe(units[i]);
+    if (exitIO) exitIO.disconnect();
+    io = new IntersectionObserver(onIO, { threshold: 0, rootMargin: '10px 0px 10px 0px' });       // 숨김=투명만 → IO 상자=실제 자리
+    exitIO = new IntersectionObserver(onExit, { threshold: 0, rootMargin: '25% 0px 25% 0px' });
+    for (var i = 0; i < units.length; i++) observeAll(units[i]);
+    for (var j = 0; j < clovers.length; j++) observeAll(clovers[j].el);
   }
 
   function update(y) {
@@ -1181,9 +1223,12 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
 
   function setupDecor() {
     if (failed) return;
-    for (var i = 0; i < clovers.length; i++) if (clovers[i].el.parentNode) clovers[i].el.parentNode.removeChild(clovers[i].el);
+    for (var i = 0; i < clovers.length; i++) {
+      var old = clovers[i].el;
+      try { if (io) io.unobserve(old); if (exitIO) exitIO.unobserve(old); } catch (e) {}
+      if (old.parentNode) old.parentNode.removeChild(old);
+    }
     clovers = [];
-    if (decoIO) decoIO.disconnect();
     para = mqPara.matches;
     var conf = mqPhone.matches ? CLV_PHONE : (mqWide.matches ? CLV_WEB : []);
     for (var n = 0; n < conf.length; n++) {
@@ -1195,13 +1240,11 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       el.style.top = cf.top;
       el.style.setProperty('--s', cf.s + 'px');
       el.style.setProperty('--r', cf.r + 'deg');
+      el.__moDeco = true;
       sec.appendChild(el);
       clovers.push({ el: el, k: para ? cf.k : 0, r: cf.r, top: 0 });
+      observeAll(el);
     }
-    decoIO = new IntersectionObserver(function (es) {
-      for (var i = 0; i < es.length; i++) if (es[i].isIntersecting) { es[i].target.classList.add('mo-in'); decoIO.unobserve(es[i].target); }
-    }, { threshold: 0 });
-    for (var m = 0; m < clovers.length; m++) decoIO.observe(clovers[m].el);
     var hw = D.querySelector('.hero > .wrap');
     if (hw) { hw.style.transform = ''; hw.style.opacity = ''; }
     heroWrap = hw;                                           // 웹=물러남+흐려짐, 폰=흐려짐만
@@ -1259,7 +1302,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
       try {
         var t = ev.target, u = t;
         while (u && u !== D.body && u.__moI === undefined) u = u.parentNode;
-        if (u && u.__moI !== undefined) { if (!u.classList.contains('mo-in')) reveal(u, 'mo-now', 0); else u.classList.add('mo-now'); sweepAbove(u.__moI); }
+        if (u && u.__moI !== undefined) { if (!u.classList.contains('mo-in')) reveal(u, 'mo-now', 0); else u.classList.add('mo-now'); }
         if (cta && t && cta.contains(t))
           for (var i = 0; i < units.length; i++) if (!units[i].classList.contains('mo-in') && cta.contains(units[i])) reveal(units[i], 'mo-now', 0);
       } catch (e) { failOpen(); }
@@ -1272,7 +1315,7 @@ html.mo .mo-now *::before, html.mo .mo-now *::after { animation: none !important
         for (var i = 0; i < units.length; i++) {
           var el = units[i]; if (el.classList.contains('mo-in')) continue;
           var r = el.getBoundingClientRect();
-          if (r.top < h) reveal(el, r.bottom > 0 ? 'mo-fast' : 'mo-now', 0);
+          if (r.top < h && r.bottom > 0) reveal(el, 'mo-fast', 0, (r.top + r.bottom) / 2 < h / 2);
         }
       } catch (e) { failOpen(); }
     };
