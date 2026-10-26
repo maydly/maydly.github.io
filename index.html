@@ -59,6 +59,7 @@ i,em{font-style:normal;}
 .serif{font-family:var(--kr); font-weight:300;}
 .wrap{max-width:var(--wrapMax); margin:0 auto; padding:0 var(--pad); position:relative;}
 .clv{display:inline-block; vertical-align:-1px;}
+.nw{white-space:nowrap;}
 
 .nav{position:sticky; top:0; z-index:40; background:rgba(246,244,238,.94); -webkit-backdrop-filter:saturate(140%) blur(10px); backdrop-filter:saturate(140%) blur(10px);
   border-bottom:1px solid transparent; transition:border-color .3s, background-color .3s;}
@@ -85,8 +86,14 @@ i,em{font-style:normal;}
 .hero h1 .em{color:var(--accentD);}
 .hero .sub{font:300 var(--t3)/1.75 var(--kr); color:var(--ink); margin-top:34px;}
 .hero .who{font:italic 400 var(--t3)/1.5 var(--lat); color:var(--ink-2); margin-top:4px;}
+.hero .readnote{position:relative; margin-top:26px; padding:2px 0 2px 16px; border-left:1px solid var(--accent); font:400 var(--t4)/1.85 var(--sans); color:var(--ink-2); text-wrap:pretty;}   
+@media (min-width:1180px){ .hero .readnote .br-n{display:none;} }
+@media (min-width:821px) and (max-width:1179.98px){   
+  .hero .checks .c{font-size:var(--t4) !important; padding-left:44px !important;}
+  .hero .checks .c::after{top:22px !important;}
+}
 .hero .checks{position:relative; display:grid; grid-template-columns:minmax(0,1fr); gap:0 36px; margin-top:32px;}
-.hero .checks .c{position:relative; padding:13px 0 14px; font:400 var(--t4)/1.65 var(--sans); color:var(--ink-2);}
+.hero .checks .c{position:relative; padding:13px 0 14px; font:400 var(--t4)/1.65 var(--sans); color:var(--ink-2); text-wrap:pretty;}
 .hero .checks .c::before{content:''; position:absolute; left:0; right:0; top:0; height:1px; background:var(--line); transform-origin:0 50%;}
 .hero .checks .c::after{content:''; position:absolute; left:0; top:0; width:26px; height:1px; background:var(--accent); transform-origin:0 50%;}
 .cwm{position:absolute; pointer-events:none; color:var(--accent); opacity:.075; z-index:0;}
@@ -109,7 +116,7 @@ i,em{font-style:normal;}
   .hero{padding:104px 0 120px;}
   .hero .wrap{grid-template-columns:minmax(0,1.12fr) minmax(0,.95fr); column-gap:var(--hgap); align-items:center;}
   .hero .wrap > :not(.checks){grid-column:1;}
-  .hero .checks{grid-column:2; grid-row:1 / span 4; align-self:center; grid-template-columns:minmax(0,1fr); max-width:none; margin:0; padding-left:clamp(10px,2vw,30px); counter-reset:ck;}
+  .hero .checks{grid-column:2; grid-row:1 / span 5; align-self:center; grid-template-columns:minmax(0,1fr); max-width:none; margin:0; padding-left:clamp(10px,2vw,30px); counter-reset:ck;}
   .hero .checks .c{counter-increment:ck; padding:22px 0 22px 56px; font:300 var(--t3)/1.6 var(--kr); color:var(--ink);}
   .hero .checks .c:first-of-type::before{background:var(--ink);}
   .hero .checks .c:last-of-type{border-bottom:1px solid var(--line);}
@@ -505,6 +512,7 @@ html.mo .hero h1 .em{animation:nRiseMask 1200ms var(--mv-o) 460ms backwards;}
 }
 html.mo .hero .sub{animation:nBlurIn 1000ms var(--mv-e) 780ms backwards;}
 html.mo .hero .who{animation:nBlurIn 1000ms var(--mv-e) 900ms backwards;}
+html.mo .hero .readnote{animation:nSlideL 1000ms var(--mv-o) 1050ms backwards;}
 html.mo .hero .checks .c{--cd:1020ms; animation:nFade 800ms var(--mv-e) calc(var(--cd) + 220ms) backwards;}
 html.mo .hero .checks .c:nth-child(2){--cd:1140ms;}
 html.mo .hero .checks .c:nth-child(3){--cd:1260ms;}
@@ -708,10 +716,11 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
     <h1 class="serif reveal"><span class="l1">너를 담는 순간,</span><br><span class="em">세상이 반하다</span></h1>
     <p class="sub reveal">지금의 나를 바라보고 기록하는 촬영.</p>
     <p class="who reveal">MyoungJin Kim · @maydly_u</p>
+    <p class="readnote reveal">이번 디자이너님 요청을 토대로<br class="br-n"> 촬영 진행 내용을 정리했어요.<br>천천히 확인해 주시고,<br class="br-n"> 그 뒤에도 궁금한 부분이 있다면<br>맨 아래 문의 양식을 작성한 뒤 질문해 주세요.</p>
     <div class="checks reveal">
       <div class="c">스튜디오 호리존에서, 나를 중심으로 진행되는 촬영</div>
       <div class="c">의상 / 소품 / 색상 중 하나의 포인트로 완성되는 촬영</div>
-      <div class="c">감정, 분위기, 느낌 등 지금의 ‘나’를 표현</div>
+      <div class="c">감정, 분위기, 느낌 등 지금의 <span class="nw">‘나’를</span> 표현</div>
       <div class="c">지금의 내가 가진 톤 앤 매너를 기록</div>
     </div>
   </div>
