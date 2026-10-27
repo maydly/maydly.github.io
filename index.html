@@ -34,8 +34,9 @@
 @font-face{font-family:'MB';font-weight:400;font-display:swap;src:url(https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2) format('woff2');}
 
 :root{
-  --paper:#f6f4ee; --paper-hi:#fdfcf8; --paper-2:#eeebe2; --leaf:#ecf1e5;
-  --ink:#1b1d19; --ink-2:#565a51; --ink-3:#8a8e85; --line:#d8d5ca; --line-2:#e5e2d8;
+  
+  --paper:#f6f5ef; --paper-hi:#fdfdf9; --paper-2:#ebf1e6; --leaf:#e4eedd;
+  --ink:#1d231b; --ink-2:#535e50; --ink-3:#7f8878; --line:#d5dccd; --line-2:#e2e7da;
   --accent:#3f7d57; --accentD:#356a4a;
   
   --bg:var(--paper); --panel:var(--paper-2); --green-wash:var(--leaf); --tx:var(--ink); --tx2:var(--ink-2); --tx3:var(--ink-3); --copyline:var(--line);
@@ -61,9 +62,9 @@ i,em{font-style:normal;}
 .clv{display:inline-block; vertical-align:-1px;}
 .nw{white-space:nowrap;}
 
-.nav{position:sticky; top:0; z-index:40; background:rgba(246,244,238,.94); -webkit-backdrop-filter:saturate(140%) blur(10px); backdrop-filter:saturate(140%) blur(10px);
+.nav{position:sticky; top:0; z-index:40; background:rgba(246,245,239,.94); -webkit-backdrop-filter:saturate(140%) blur(10px); backdrop-filter:saturate(140%) blur(10px);
   border-bottom:1px solid transparent; transition:border-color .3s, background-color .3s;}
-.nav.scr{border-bottom-color:var(--line); background:rgba(246,244,238,.97);}
+.nav.scr{border-bottom-color:var(--line); background:rgba(246,245,239,.97);}
 .nav .in{display:flex; align-items:center; justify-content:space-between; gap:20px; height:var(--nav);}
 .brand{display:flex; align-items:center; gap:7px; font:italic 400 26px/1 var(--lat); letter-spacing:-.005em; color:var(--ink);}
 .brand .clv{width:14px; height:14px;}
@@ -78,7 +79,8 @@ i,em{font-style:normal;}
   .navlinks{display:none;}
 }
 
-.hero{position:relative; padding:64px 0 76px; overflow:hidden; text-align:left;}
+.hero{position:relative; padding:64px 0 76px; overflow:hidden; text-align:left;
+  background:radial-gradient(120% 75% at 22% 0%, rgba(205,226,197,.5), rgba(205,226,197,0) 64%);}   
 .hero .wrap{display:grid; grid-template-columns:minmax(0,1fr);}
 .hero .eyebrow{font:italic 400 var(--t3)/1.4 var(--lat); color:var(--ink-2); letter-spacing:.005em; margin:0 0 20px;}
 .hero h1{font:200 var(--t1)/1.22 var(--kr); letter-spacing:-.012em; color:var(--ink);}
@@ -449,6 +451,9 @@ footer a:hover{color:var(--ink); text-decoration-color:var(--ink-3);}
   #cta > .wrap .kicker{position:static; width:auto; display:block; margin:0 0 24px;}
   #cta > .wrap .kicker::before{display:block; margin:0 0 18px -4px;}
 }
+
+.cond-ink :is(#notice .acc .a .inner b, #notice .acc .a .inner strong, #studio .callout-box b, #guide b.cond){color:var(--ink);}
+.cond-ink .price .row .v{color:var(--ink);}
 </style>
 <style id="sian-v2-motion-css">
 @property --chv{syntax:'<integer>'; inherits:false; initial-value:1;}
@@ -839,7 +844,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   </div>
   <div class="grid3 reveal">
     <div class="card"><div class="en">Hair & Makeup</div><h3>헤어 / 메이크업</h3>
-      <p data-lb="guide-hm1">헤어/메이크업은 촬영에 <b>포함되어 있지 않습니다.</b><br>원하시는 경우 샵에서 받고 오셔도 괜찮습니다.<br><br>다만 샵 이용 예정이시거나 헤어/메이크업 방향이 크게 달라지는 경우에는, 촬영 시안과 잘 맞는지 미리 한 번만 공유해주시면 감사하겠습니다.</p>
+      <p data-lb="guide-hm1">헤어/메이크업은 촬영에 <b class="cond">포함되어 있지 않습니다.</b><br>원하시는 경우 샵에서 받고 오셔도 괜찮습니다.<br><br>다만 샵 이용 예정이시거나 헤어/메이크업 방향이 크게 달라지는 경우에는, 촬영 시안과 잘 맞는지 미리 한 번만 공유해주시면 감사하겠습니다.</p>
       <p data-lb="guide-hm2">메이크업은 <b>매트한 피부 표현</b>으로 준비해주시면 좋겠어요.<br>스튜디오 조명이 강하게 들어가는 편이라, 매트한 쪽을 추천드리며, 제 생각에 훨씬 잘 나오는 편이에요.</p></div>
     <div class="card"><div class="en">Clothes</div><h3>의상</h3>
       <p data-lb="guide-clothes1">의상은 시안을 참고한 기준으로 자유롭게 준비해주셔도 괜찮아요<br>시안이 정리되고 나면 참고하실 수 있는 이미지도 따로 같이 보내드리고 있어서, 그 안에서 편하게 취향 맞게 준비해주시면 됩니다. 예약이 확정되면 의상 준비 관련해서 별도로 안내 드릴게요</p>
@@ -847,7 +852,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
     <div class="card"><div class="en">Props</div><h3>소품</h3>
       <p data-lb="guide-props1">스튜디오에는 제 소유의 다양한 소품과 배경지 등을 보관, 보유하고 있어요. 다만 촬영마다 사용 상황이 달라 모두 정리해서 미리 목록을 드리기가 어렵고, 컨셉 상의 시 필요한 것들이 있다면 먼저 가능한 부분 말씀 드릴게요!</p>
       <p data-lb="guide-props2">당일 현장에서 함께 확인하면서 활용하는 방식도 괜찮아요.</p>
-      <p data-lb="guide-props3">원하시는 이미지나 시안에 <b>꼭 필요한 소모성 및 개인 소품은 반드시 직접 준비</b>해 오시길 부탁드려요</p></div>
+      <p data-lb="guide-props3">원하시는 이미지나 시안에 <b class="cond">꼭 필요한 소모성 및 개인 소품은 반드시 직접 준비</b>해 오시길 부탁드려요</p></div>
   </div>
 </div></section>
 
