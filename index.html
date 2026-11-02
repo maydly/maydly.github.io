@@ -24,33 +24,120 @@
 </script>
 <script id="sian-v2-expire">
 (function (d, w) {
-  try {
-    var ls = w.localStorage, K = 'maydly_sian_first', O = 'maydly_sian_owner';
-    var endOf = function (first) {
-      var f = new Date(first), y = f.getFullYear(), m = f.getMonth() + 2;
-      var last = new Date(y, m + 1, 0).getDate();
-      return new Date(y, m, Math.min(f.getDate(), last), f.getHours(), f.getMinutes(), f.getSeconds(), f.getMilliseconds()).getTime();
-    };
-    w.__sianExpireEnd = endOf;
-    var p = new URLSearchParams(w.location.search), clean = false;
-    if (p.get('owner') === '1') { ls.setItem(O, '1'); p.delete('owner'); clean = true; }
-    if (p.get('reopen') === '1') { ls.setItem(K, String(Date.now())); p.delete('reopen'); clean = true; }
-    if (clean && w.history && w.history.replaceState) {
-      var q = p.toString();
-      w.history.replaceState(null, '', w.location.pathname + (q ? '?' + q : '') + w.location.hash);
+  var de = d.documentElement;
+  var PAGE = de.getAttribute('data-sian-page') === 'cal' ? 'cal' : 'sian';
+  var API = 'https://firestore.googleapis.com/v1/projects/subin-routine/databases/(default)/documents/';
+  var K = 'maydly_sian_key', F = 'maydly_sian_first', S = 'maydly_sian_status', Q = 'maydly_sian_req';
+  var ls = null;
+  try { ls = w.localStorage; ls.getItem(K); } catch (e) { ls = null; }
+  if (!ls) return;
+  function get(k) { try { return ls.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { ls.setItem(k, v); } catch (e) {} }
+  function newKey() {
+    var a = new Uint8Array(32), s = '', c = 'abcdefghijklmnopqrstuvwxyz0123456789', i;
+    try { w.crypto.getRandomValues(a); } catch (e) { for (i = 0; i < 32; i++) a[i] = Math.floor(Math.random() * 256); }
+    for (i = 0; i < 32; i++) s += c.charAt(a[i] % 36);
+    return s;
+  }
+  function endOf(t) {
+    var f = new Date(t), y = f.getFullYear(), m = f.getMonth() + 1, last = new Date(y, m + 1, 0).getDate();
+    return new Date(y, m, Math.min(f.getDate(), last), f.getHours(), f.getMinutes(), f.getSeconds(), f.getMilliseconds()).getTime();
+  }
+  var key = get(K);
+  if (!/^[a-z0-9]{32}$/.test(key || '')) { key = newKey(); set(K, key); }
+  var first = parseInt(get(F) || '', 10);
+  if (!first) { first = Date.now(); set(F, String(first)); }
+  w.__sianExpireEnd = endOf;
+
+  var OPEN = { approved: 1, owner: 1 }, SHUT = { closed: 1, black: 1 };
+  function show(state) {
+    de.classList.toggle('sian-expired', state === 'shut');
+    de.classList.toggle('sian-checking', state === 'wait');
+  }
+  function inMonth() { return Date.now() < endOf(first); }
+  function mark(cls, on) { var el = d.getElementById('sian-expired'); if (el) el.classList.toggle(cls, !!on); }
+  function local() {
+    if (!inMonth()) return 'wait';
+    return SHUT[get(S) || ''] ? 'shut' : 'open';
+  }
+  var busy = false;
+  function check() {
+    show(local());
+    if (busy) return;
+    if (!w.fetch) { if (!inMonth()) show('shut'); return; }
+    busy = true;
+    var done = false, ctl = w.AbortController ? new w.AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); fail(); }, 8000);
+    function finish() { done = true; busy = false; clearTimeout(timer); }
+    function fail() {
+      if (done) return; finish();
+      if (inMonth() && !SHUT[get(S) || '']) { show('open'); return; }
+      show('shut'); mark('is-error', true);
     }
-    var check = function () {
+    var opt = { cache: 'no-store' }; if (ctl) opt.signal = ctl.signal;
+    w.fetch(API + 'sian_access/' + key, opt)
+      .then(function (r) {
+        if (r.status === 404) return { none: true };
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        if (done) return; finish(); mark('is-error', false);
+        var st = (!j || j.none) ? '' : ((j.fields && j.fields.status && j.fields.status.stringValue) || '');
+        set(S, st);
+        if (OPEN[st]) show('open');
+        else if (SHUT[st]) show('shut');
+        else show(inMonth() ? 'open' : 'shut');
+      })
+      .catch(fail);
+  }
+  function norm(h) {
+    return String(h || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@+/, '')
+      .replace(/[\/?#].*$/, '').replace(/\s+/g, '').toLowerCase().slice(0, 40);
+  }
+  function request(kind, name, insta) {
+    var body = { fields: {
+      key: { stringValue: key }, kind: { stringValue: kind },
+      name: { stringValue: String(name || '').trim().slice(0, 40) }, insta: { stringValue: norm(insta) },
+      first: { integerValue: String(first) }, at: { timestampValue: new Date().toISOString() }, page: { stringValue: PAGE } } };
+    return w.fetch(API + 'sian_requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return true; });
+  }
+  check();
+  w.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
+  d.addEventListener('visibilitychange', function () { if (d.visibilityState === 'visible') check(); });
+
+  d.addEventListener('DOMContentLoaded', function () {
+    var box = d.getElementById('sian-expired'); if (!box) return;
+    if (parseInt(get(Q) || '', 10)) box.classList.add('is-requested');
+    var f = d.getElementById('sx-form'), msg = d.getElementById('sx-msg'), rt = d.getElementById('sx-retry');
+    if (rt) rt.addEventListener('click', function () { mark('is-error', false); check(); });
+    if (f) f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = d.getElementById('sx-name').value, i = d.getElementById('sx-insta').value;
+      if (!String(n).trim() && !norm(i)) { msg.textContent = '성함이나 인스타그램 아이디를 적어 주세요.'; return; }
+      var b = f.querySelector('button'); if (b) b.disabled = true;
+      msg.textContent = '보내는 중이에요';
+      request('requested', n, i).then(function () {
+        set(Q, String(Date.now())); box.classList.add('is-requested'); msg.textContent = '';
+      }).catch(function () {
+        msg.textContent = '요청이 안 됐어요. 카카오 채널로 말씀해 주세요.'; if (b) b.disabled = false;
+      });
+    });
+  });
+  w.addEventListener('load', function () {
+    var orig = w.copyInquiry;
+    if (typeof orig !== 'function' || orig.__sian) return;
+    var wrap = function () {
       try {
-        if (ls.getItem(O) === '1') return;
-        var first = parseInt(ls.getItem(K) || '', 10);
-        if (!first) { ls.setItem(K, String(Date.now())); return; }
-        if (Date.now() >= endOf(first)) d.documentElement.classList.add('sian-expired');
+        var n = (d.getElementById('f-name') || {}).value || '', i = (d.getElementById('f-insta') || {}).value || '';
+        if (String(n).trim() || norm(i)) request('inquired', n, i).catch(function () {});
       } catch (e) {}
+      return orig.apply(this, arguments);
     };
-    check();
-    w.addEventListener('pageshow', check);
-    d.addEventListener('visibilitychange', function () { if (d.visibilityState === 'visible') check(); });
-  } catch (e) {}
+    wrap.__sian = true;
+    w.copyInquiry = wrap;
+  });
 })(document, window);
 </script>
 <title>maydly — 너를 담는 순간, 세상이 반하다</title>
@@ -503,16 +590,32 @@ footer a:hover{color:var(--ink); text-decoration-color:var(--ink-3);}
 @media (min-width:821px){ #studio .callout-box{padding:30px 30px 26px;} }
 
 #sian-expired{display:none;}
-html.sian-expired body > *:not(#sian-expired){display:none !important;}
-html.sian-expired body{padding:0 !important;}
-html.sian-expired #sian-expired{display:flex; min-height:100vh; min-height:100svh; align-items:center; justify-content:center; padding:48px 24px; background:var(--grain), var(--paper); text-align:center;}
-#sian-expired .sx-card{max-width:420px;}
+html.sian-checking body > *:not(#sian-expired), html.sian-expired body > *:not(#sian-expired){display:none !important;}
+html.sian-checking body, html.sian-expired body{padding:0 !important;}
+html.sian-checking #sian-expired, html.sian-expired #sian-expired{display:flex; min-height:100vh; min-height:100svh; align-items:center; justify-content:center; padding:48px 24px; background:var(--grain), var(--paper); text-align:center;}
+#sian-expired .sx-card{width:100%; max-width:400px;}
 #sian-expired .sx-logo{display:inline-flex; align-items:center; gap:8px; font:italic 400 40px/1 var(--lat); color:var(--ink);}
 #sian-expired .sx-clv{color:var(--accent);}
-#sian-expired .sx-t{margin:34px 0 12px; font:600 21px/1.55 var(--sans); color:var(--ink);}
-#sian-expired .sx-d{margin:0; font:400 var(--t4)/1.9 var(--sans); color:var(--ink-2);}
-#sian-expired .sx-btn{display:inline-flex; align-items:center; justify-content:center; min-height:48px; margin-top:28px; padding:0 24px; border-radius:12px; background:#fee500; color:#3c1e1e; font:700 15px/1 var(--sans); text-decoration:none;}
-@media (prefers-reduced-motion: no-preference){ html.sian-expired #sian-expired .sx-card{animation:sxIn .9s cubic-bezier(.16,1,.3,1) both;} }
+#sian-expired .sx-wait{display:none; margin:26px 0 0; font:400 var(--t5)/1.6 var(--sans); color:var(--ink-3);}
+html.sian-checking #sian-expired .sx-wait{display:block;}
+#sian-expired .sx-main{display:none;}
+html.sian-expired #sian-expired .sx-main{display:block;}
+#sian-expired .sx-t{margin:30px 0 10px; font:600 21px/1.55 var(--sans); color:var(--ink);}
+#sian-expired .sx-d{margin:0; font:400 var(--t4)/1.85 var(--sans); color:var(--ink-2);}
+#sian-expired .sx-form{margin:22px 0 0; text-align:left;}
+#sian-expired .sx-l{display:block; margin:12px 0 5px; font:500 var(--t5)/1.4 var(--sans); color:var(--ink-2);}
+#sian-expired .sx-i{display:block; width:100%; min-height:46px; padding:0 14px; border:1px solid var(--line); border-radius:12px; background:var(--paper-hi); font:400 16px/1.4 var(--sans); color:var(--ink); -webkit-appearance:none; appearance:none;}
+#sian-expired .sx-i:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(63,125,87,.15);}
+#sian-expired .sx-req{display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; margin-top:16px; border:0; border-radius:12px; background:var(--accent); color:#fff; font:700 15px/1 var(--sans); cursor:pointer;}
+#sian-expired .sx-req:disabled{opacity:.55; cursor:default;}
+#sian-expired .sx-msg{min-height:1.4em; margin:8px 0 0; font:400 var(--t5)/1.5 var(--sans); color:#9b2c2c; text-align:center;}
+#sian-expired .sx-done{display:none; margin:22px 0 0; padding:14px 16px; border-radius:12px; background:#eef5ef; font:500 var(--t4)/1.7 var(--sans); color:var(--accentD);}
+#sian-expired.is-requested .sx-form{display:none;}
+#sian-expired.is-requested .sx-done{display:block;}
+#sian-expired .sx-retry{display:none; margin:14px auto 0; padding:9px 16px; border:1px solid var(--line); border-radius:10px; background:var(--paper-hi); font:500 var(--t5)/1 var(--sans); color:var(--ink-2); cursor:pointer;}
+#sian-expired.is-error .sx-retry{display:inline-flex;}
+#sian-expired .sx-btn{display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; margin-top:10px; border-radius:12px; background:#fee500; color:#3c1e1e; font:700 15px/1 var(--sans); text-decoration:none;}
+@media (prefers-reduced-motion: no-preference){ html.sian-expired #sian-expired .sx-main{animation:sxIn .9s cubic-bezier(.16,1,.3,1) both;} }
 @keyframes sxIn{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
 </style>
 <style id="sian-v2-motion-css">
@@ -766,12 +869,24 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
 </style>
 </head>
 <body>
-<!-- 시안 열람 기간(처음 연 날부터 2개월)이 지나면 이 화면만 보인다 -->
 <div id="sian-expired"><div class="sx-card">
   <div class="sx-logo">maydly <svg class="sx-clv" width="20" height="20"><use href="#clover"/></svg></div>
-  <p class="sx-t">시안을 볼 수 있는<br>기간이 지났어요</p>
-  <p class="sx-d">이 시안은 처음 보신 날부터<br>2개월 동안 볼 수 있어요.<br>다시 확인하고 싶으시면<br>카카오 채널로 말씀해 주세요.</p>
-  <a class="sx-btn" href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" rel="noopener">카카오 채널로 문의하기</a>
+  <p class="sx-wait">확인하는 중이에요</p>
+  <div class="sx-main">
+    <p class="sx-t">지금은 시안이<br>닫혀 있어요</p>
+    <p class="sx-d">다시 보고 싶으시면 요청해 주세요.<br>확인 후 열어 드릴게요.</p>
+    <form class="sx-form" id="sx-form" novalidate>
+      <label class="sx-l" for="sx-name">성함</label>
+      <input class="sx-i" id="sx-name" type="text" maxlength="40" autocomplete="name" placeholder="편하게 불러 드릴 이름">
+      <label class="sx-l" for="sx-insta">인스타그램 아이디</label>
+      <input class="sx-i" id="sx-insta" type="text" maxlength="60" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="예) maydly_u">
+      <button class="sx-req" type="submit">다시 보기 요청</button>
+      <p class="sx-msg" id="sx-msg" role="status"></p>
+    </form>
+    <p class="sx-done">요청했어요.<br>확인되면 이 주소에서 바로 보실 수 있어요.</p>
+    <button class="sx-retry" id="sx-retry" type="button">다시 확인하기</button>
+    <a class="sx-btn" href="http://pf.kakao.com/_pxnxgbn/chat" target="_blank" rel="noopener">카카오 채널로 문의하기</a>
+  </div>
 </div></div>
 
 <svg style="display:none"><symbol id="clover" viewBox="0 0 40 40"><g fill="currentColor"><path d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(90 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(180 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/><path transform="rotate(270 20 20)" d="M20,20 C16,14 8,13 8,8 C8,4.5 13,3.5 16,6 C18,7.5 19.5,9 20,10.5 C20.5,9 22,7.5 24,6 C27,3.5 32,4.5 32,8 C32,13 24,14 20,20 Z"/></g></symbol></svg>
@@ -1309,6 +1424,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   }
 
   function send(){
+    if (document.documentElement.classList.contains('sian-expired')) return;
     if(alive < 5) return;                    // 5초도 안 머문 건 버린다(봇·오클릭)
     if(seq >= MAX_SEQ) return;               // 조각 상한
     if(alive <= lastSentAlive) return;       // 지난번 이후 새로 본 게 없으면 안 보낸다
