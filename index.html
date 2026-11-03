@@ -27,12 +27,13 @@
   var de = d.documentElement;
   var PAGE = de.getAttribute('data-sian-page') === 'cal' ? 'cal' : 'sian';
   var API = 'https://firestore.googleapis.com/v1/projects/subin-routine/databases/(default)/documents/';
-  var K = 'maydly_sian_key', F = 'maydly_sian_first', S = 'maydly_sian_status', Q = 'maydly_sian_req';
+  var K = 'maydly_sian_key', F = PAGE === 'cal' ? 'maydly_cal_first' : 'maydly_sian_first', S = 'maydly_sian_status', Q = 'maydly_sian_req', Y = 'maydly_sian_y';
   var ls = null;
   try { ls = w.localStorage; ls.getItem(K); } catch (e) { ls = null; }
   if (!ls) return;
   function get(k) { try { return ls.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { ls.setItem(k, v); } catch (e) {} }
+  function del(k) { try { ls.removeItem(k); } catch (e) {} }
   function newKey() {
     var a = new Uint8Array(32), s = '', c = 'abcdefghijklmnopqrstuvwxyz0123456789', i;
     try { w.crypto.getRandomValues(a); } catch (e) { for (i = 0; i < 32; i++) a[i] = Math.floor(Math.random() * 256); }
@@ -43,37 +44,61 @@
     var f = new Date(t), y = f.getFullYear(), m = f.getMonth() + 1, last = new Date(y, m + 1, 0).getDate();
     return new Date(y, m, Math.min(f.getDate(), last), f.getHours(), f.getMinutes(), f.getSeconds(), f.getMilliseconds()).getTime();
   }
+  var U = 'maydly_sian_unfold';
   var key = get(K);
   if (!/^[a-z0-9]{32}$/.test(key || '')) { key = newKey(); set(K, key); }
   var first = parseInt(get(F) || '', 10);
   if (!first) { first = Date.now(); set(F, String(first)); }
   w.__sianExpireEnd = endOf;
+  if (PAGE === 'sian' && Date.now() - (parseInt(get(U) || '', 10) || 0) > 7 * 864e5 && get(S) !== 'owner') de.classList.add('sian-fold');
 
   var OPEN = { approved: 1, owner: 1 }, SHUT = { closed: 1, black: 1 };
-  function show(state) {
-    de.classList.toggle('sian-expired', state === 'shut');
-    de.classList.toggle('sian-checking', state === 'wait');
+  var state = '', err = false, seen = false, reqAt = 0, QDAYS = 3 * 864e5;
+  var nav = ''; try { nav = ((w.performance && w.performance.getEntriesByType && w.performance.getEntriesByType('navigation')[0]) || {}).type || ''; } catch (e) {}
+  var backY = -1;
+  function show(s) {
+    var was = state;
+    state = s;
+    de.classList.toggle('sian-expired', s === 'shut');
+    de.classList.toggle('sian-checking', s === 'wait');
+    if (s === 'open' && was === 'wait' && backY > 0) {
+      var y = backY; backY = -1;
+      setTimeout(function () { w.scrollTo(0, y); }, 0);
+      setTimeout(function () { if ((w.pageYOffset || 0) < y - 4) w.scrollTo(0, y); }, 450);
+    }
   }
+  function saveY() { if (state === 'open') { try { w.sessionStorage.setItem(Y, String(Math.round(w.pageYOffset || 0))); } catch (e) {} } }
+  function box() { return d.getElementById('sian-expired'); }
+  function mark(on) { err = !!on; var b = box(); if (b) b.classList.toggle('is-error', err); }
+  function reqTime() { var q = parseInt(get(Q) || '', 10) || reqAt; if (q && Date.now() - q > QDAYS) { del(Q); reqAt = 0; q = 0; } return q; }
+  function reqMark() { var b = box(); if (b) b.classList.toggle('is-requested', !!reqTime()); }
   function inMonth() { return Date.now() < endOf(first); }
-  function mark(cls, on) { var el = d.getElementById('sian-expired'); if (el) el.classList.toggle(cls, !!on); }
   function local() {
     if (!inMonth()) return 'wait';
     return SHUT[get(S) || ''] ? 'shut' : 'open';
   }
-  var busy = false;
-  function check() {
-    show(local());
-    if (busy) return;
-    if (!w.fetch) { if (!inMonth()) show('shut'); return; }
-    busy = true;
-    var done = false, ctl = w.AbortController ? new w.AbortController() : null;
-    var timer = setTimeout(function () { if (ctl) ctl.abort(); fail(); }, 8000);
-    function finish() { done = true; busy = false; clearTimeout(timer); }
-    function fail() {
-      if (done) return; finish();
-      if (inMonth() && !SHUT[get(S) || '']) { show('open'); return; }
-      show('shut'); mark('is-error', true);
-    }
+  var seq = 0, started = 0, ctl = null, timer = 0;
+  function stop() {
+    seq++; started = 0; clearTimeout(timer);
+    if (ctl) { try { ctl.abort(); } catch (e) {} ctl = null; }
+  }
+  function fail() {
+    if (state === 'open' || (state === 'shut' && seen)) return;
+    if (inMonth() && !SHUT[get(S) || '']) { show('open'); return; }
+    show('shut'); mark(true);
+  }
+  function check(keep) {
+    if (!(keep && (state === 'open' || state === 'shut'))) show(local());
+    if (started && Date.now() - started < 8000) return;
+    stop();
+    if (!w.fetch) { if (state === 'wait') show('shut'); return; }
+    var my = seq; started = Date.now();
+    ctl = w.AbortController ? new w.AbortController() : null;
+    timer = setTimeout(function () {
+      if (my !== seq) return;
+      if (d.hidden) { stop(); return; }
+      stop(); fail();
+    }, 8000);
     var opt = { cache: 'no-store' }; if (ctl) opt.signal = ctl.signal;
     w.fetch(API + 'sian_access/' + key, opt)
       .then(function (r) {
@@ -82,17 +107,24 @@
         return r.json();
       })
       .then(function (j) {
-        if (done) return; finish(); mark('is-error', false);
-        var st = (!j || j.none) ? '' : ((j.fields && j.fields.status && j.fields.status.stringValue) || '');
+        if (my !== seq) return;
+        started = 0; clearTimeout(timer); ctl = null; mark(false); seen = true;
+        var f = (j && !j.none && j.fields) || {};
+        var st = (f.status && f.status.stringValue) || '';
+        var at = Date.parse((f.at && f.at.timestampValue) || '') || 0;
         set(S, st);
+        if (st === 'owner') de.classList.remove('sian-fold');
+        var q = reqTime();
+        if (q && (OPEN[st] || (st !== 'black' && at > q))) { del(Q); reqAt = 0; }
+        reqMark();
         if (OPEN[st]) show('open');
         else if (SHUT[st]) show('shut');
         else show(inMonth() ? 'open' : 'shut');
       })
-      .catch(fail);
+      .catch(function () { if (my === seq) { stop(); fail(); } });
   }
   function norm(h) {
-    return String(h || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@+/, '')
+    return String(h || '').trim().replace(/^(https?:\/\/)?([a-z0-9-]+\.)?(instagram\.com|instagr\.am)\//i, '').replace(/^@+/, '')
       .replace(/[\/?#].*$/, '').replace(/\s+/g, '').toLowerCase().slice(0, 40);
   }
   function request(kind, name, insta) {
@@ -101,27 +133,37 @@
       name: { stringValue: String(name || '').trim().slice(0, 40) }, insta: { stringValue: norm(insta) },
       first: { integerValue: String(first) }, at: { timestampValue: new Date().toISOString() }, page: { stringValue: PAGE } } };
     return w.fetch(API + 'sian_requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return true; });
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json().catch(function () { return {}; }); })
+      .then(function (j) { return Date.parse((j && j.createTime) || '') || Date.now(); });
   }
-  check();
-  w.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
-  d.addEventListener('visibilitychange', function () { if (d.visibilityState === 'visible') check(); });
+  if (local() === 'wait' && (nav === 'reload' || nav === 'back_forward')) {
+    try { backY = parseInt(w.sessionStorage.getItem(Y) || '', 10) || -1; if (backY > 0 && 'scrollRestoration' in w.history) w.history.scrollRestoration = 'manual'; } catch (e) { backY = -1; }
+  }
+  check(false);
+  w.addEventListener('pageshow', function (e) { if (e.persisted) check(true); });
+  w.addEventListener('pagehide', saveY);
+  d.addEventListener('visibilitychange', function () { if (d.visibilityState === 'visible') check(true); else saveY(); });
 
   d.addEventListener('DOMContentLoaded', function () {
-    var box = d.getElementById('sian-expired'); if (!box) return;
-    if (parseInt(get(Q) || '', 10)) box.classList.add('is-requested');
-    var f = d.getElementById('sx-form'), msg = d.getElementById('sx-msg'), rt = d.getElementById('sx-retry');
-    if (rt) rt.addEventListener('click', function () { mark('is-error', false); check(); });
+    var b = box(); if (!b) return;
+    reqMark(); b.classList.toggle('is-error', err);
+    var f = d.getElementById('sx-form'), msg = d.getElementById('sx-msg'), rt = d.getElementById('sx-retry'), fo = d.getElementById('fold-open');
+    if (fo) fo.addEventListener('click', function () {
+      de.classList.remove('sian-fold'); set(U, String(Date.now()));
+      var to = d.getElementById('direction');
+      if (to) setTimeout(function () { to.scrollIntoView({ behavior: (w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth', block: 'start' }); }, 30);
+    });
+    if (rt) rt.addEventListener('click', function () { mark(false); check(false); });
     if (f) f.addEventListener('submit', function (e) {
       e.preventDefault();
       var n = d.getElementById('sx-name').value, i = d.getElementById('sx-insta').value;
       if (!String(n).trim() && !norm(i)) { msg.textContent = '성함이나 인스타그램 아이디를 적어 주세요.'; return; }
-      var b = f.querySelector('button'); if (b) b.disabled = true;
+      var bt = f.querySelector('button'); if (bt) bt.disabled = true;
       msg.textContent = '보내는 중이에요';
-      request('requested', n, i).then(function () {
-        set(Q, String(Date.now())); box.classList.add('is-requested'); msg.textContent = '';
+      request('requested', n, i).then(function (t) {
+        reqAt = t; set(Q, String(t)); reqMark(); msg.textContent = ''; if (bt) bt.disabled = false;
       }).catch(function () {
-        msg.textContent = '요청이 안 됐어요. 카카오 채널로 말씀해 주세요.'; if (b) b.disabled = false;
+        msg.textContent = '요청이 안 됐어요. 카카오 채널로 말씀해 주세요.'; if (bt) bt.disabled = false;
       });
     });
   });
@@ -614,9 +656,29 @@ html.sian-expired #sian-expired .sx-main{display:block;}
 #sian-expired.is-requested .sx-done{display:block;}
 #sian-expired .sx-retry{display:none; margin:14px auto 0; padding:9px 16px; border:1px solid var(--line); border-radius:10px; background:var(--paper-hi); font:500 var(--t5)/1 var(--sans); color:var(--ink-2); cursor:pointer;}
 #sian-expired.is-error .sx-retry{display:inline-flex;}
+#sian-expired .sx-err{display:none; margin:30px 0 6px; font:600 19px/1.6 var(--sans); color:var(--ink);}
+#sian-expired.is-error .sx-err{display:block;}
+#sian-expired.is-error .sx-t, #sian-expired.is-error .sx-d, #sian-expired.is-error .sx-form, #sian-expired.is-error .sx-done{display:none;}
 #sian-expired .sx-btn{display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; margin-top:10px; border-radius:12px; background:#fee500; color:#3c1e1e; font:700 15px/1 var(--sans); text-decoration:none;}
 @media (prefers-reduced-motion: no-preference){ html.sian-expired #sian-expired .sx-main{animation:sxIn .9s cubic-bezier(.16,1,.3,1) both;} }
 @keyframes sxIn{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+
+html.sian-fold body > section, html.sian-fold body > footer{display:none !important;}
+.hero .fold{display:none;}
+.hero .wrap > .fold{grid-column:1 / -1 !important;}
+html.sian-fold .hero .fold{display:flex; justify-content:center; margin:40px 0 4px;}
+.hero .fold button{display:inline-flex; align-items:center; gap:10px; min-height:52px; padding:0 28px; border:1px solid var(--accent); border-radius:999px; background:var(--accent); color:#fff; font:600 16px/1.2 var(--sans); letter-spacing:.01em; cursor:pointer; box-shadow:0 10px 26px -14px rgba(53,106,74,.55); text-align:center;}
+.hero .fold button svg{flex:none; width:14px; height:14px; transition:transform .5s cubic-bezier(.16,1,.3,1);}
+.hero .fold button:active svg{transform:translateY(3px);}
+@media (prefers-reduced-motion: no-preference){ html.sian-fold .hero .fold button{animation:foldIn .9s .3s cubic-bezier(.16,1,.3,1) both;} }
+@keyframes foldIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+
+.hl{font-synthesis:none;}
+.hero .checks .c b.hl{color:var(--accentD); font-weight:430;}
+@media (min-width:821px){ .hero .checks .c b.hl{font-weight:400;} }
+#core .body b.hl{color:#2f5f42; font-weight:500;}
+h2.big .hl{color:var(--accentD); font-weight:400;}
+.card b.hl{color:var(--accentD); font-weight:600;}
 </style>
 <style id="sian-v2-motion-css">
 @property --chv{syntax:'<integer>'; inherits:false; initial-value:1;}
@@ -875,6 +937,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   <div class="sx-main">
     <p class="sx-t">지금은 시안이<br>닫혀 있어요</p>
     <p class="sx-d">다시 보고 싶으시면 요청해 주세요.<br>확인 후 열어 드릴게요.</p>
+    <p class="sx-err">연결이 잠깐 안 돼서<br>확인을 못 했어요.</p>
     <form class="sx-form" id="sx-form" novalidate>
       <label class="sx-l" for="sx-name">성함</label>
       <input class="sx-i" id="sx-name" type="text" maxlength="40" autocomplete="name" placeholder="편하게 불러 드릴 이름">
@@ -907,9 +970,10 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
     <div class="checks reveal">
       <div class="c">스튜디오 호리존에서, 나를 중심으로 진행되는 촬영</div>
       <div class="c">의상 / 소품 / 색상 중 하나의 포인트로 완성되는 촬영</div>
-      <div class="c">원하시는 내 분위기에,<br>다른 내 모습의 결 하나<br>두가지의 내 모습을 담는 촬영</div>
+      <div class="c"><b class="hl">원하시는 내 분위기에,<br>다른 내 모습의 결 하나<br>두가지의 내 모습을 담는 촬영</b></div>
       <div class="c">수빈님과 제가 각자, 또 같이 찍는 촬영</div>
     </div>
+    <div class="fold"><button type="button" id="fold-open" onclick="document.documentElement.classList.remove('sian-fold')">상세하게 정리한 내용 보기 <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
   </div>
 </header>
 
@@ -935,7 +999,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   <div class="kicker"><span class="kk"><span class="kk-ko">핵심 안내</span></span></div>
   <p class="pull serif" style="margin-top:18px;">이 촬영에서<br>제일 중요한 건<br>딱 하나예요.<br><br>“<span class="g">왜 내가 이 사진이<br>끌렸는지</span>”</p>
   <div class="body">
-    <p data-lb="core-b1">예쁘게, 멋있게 남기고 싶은 마음은 당연해요.<br>다만 그 사진의 사람이 왜 그렇게 보였는지,<br>나는 왜 지금의 나를 그렇게 담고 싶었는지,<br>한 번만 더 생각해 주시면 충분해요.</p>
+    <p data-lb="core-b1">예쁘게, 멋있게 남기고 싶은 마음은 당연해요.<br>다만 <b class="hl">그 사진의 사람이 왜 그렇게 보였는지,<br>나는 왜 지금의 나를 그렇게 담고 싶었는지,</b><br>한 번만 더 생각해 주시면 충분해요.</p>
   </div>
   <div class="callout-box quote" data-lb="core-quote"><b>"잘 해야 한다"</b> 는 생각은 내려두셔도 괜찮아요.<br><b>난데 뭐 어때</b> — 그 마음으로 와주시면 돼요.<br>나다운 게 아름다운 거고,<br>아름다운 게 나다운 거니까요.</div>
   <div class="body">
@@ -1007,7 +1071,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
 <!-- 촬영 구성 -->
 <section class="sec-panel" id="structure"><div class="wrap center reveal">
   <div class="kicker"><span class="kk"><span class="kk-ko">촬영 구성</span> <i class="kk-en">Concept Structure</i></span></div>
-  <h2 class="big serif" data-lb="structure-h2">촬영은 총 2시간 정도로 진행돼요.</h2>
+  <h2 class="big serif" data-lb="structure-h2">촬영은 총 <span class="hl">2컨셉으로<br class="br-n"> 2시간 정도로</span> 진행돼요.</h2>
   <p class="lead" data-lb="structure-lead">촬영 + 셀렉까지 포함된 시간이에요</p>
   <div class="grid2">
     <div class="card"><div class="en">01</div><h3>메인 촬영</h3><p data-lb="structure-card1">내 모습을 담기 원하시는 분위기 기준으로 같이 방향 잡아서 진행해요.</p></div>
@@ -1021,12 +1085,12 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
 <section id="guide"><div class="wrap">
   <div class="center reveal">
     <div class="kicker"><span class="kk"><span class="kk-ko">준비 참고</span> <i class="kk-en">Styling Guide</i></span></div>
-    <h2 class="big serif" data-lb="guide-h2">촬영 전 준비에 참고해주세요.</h2>
-    <p class="lead" data-lb="guide-lead">촬영 전 준비하실 때 참고 안내입니다.<br>준비한 만큼 결과물에 그대로 담겨요.<br><b>완벽한 준비보다 방향을 함께 맞추는 게</b> 중요해요</p>
+    <h2 class="big serif" data-lb="guide-h2">촬영 5일 전까지<br class="br-n"> 함께 확인해요.</h2>
+    <p class="lead" data-lb="guide-lead">아래 내용은 <b>촬영일 5일 전까지</b><br>확인하고 공유해 주세요.<br>함께 상의하면서<br>방향을 맞춰 갈 내용들이에요.</p>
   </div>
   <div class="grid3 reveal">
     <div class="card"><div class="en">Hair & Makeup</div><h3>헤어 / 메이크업</h3>
-      <p data-lb="guide-hm1">헤어/메이크업은 촬영에 <b class="cond">포함되어 있지 않습니다.</b><br>직접 준비 혹은 원하시는 경우 샵에서 받고 오셔도 괜찮습니다.<br><br>다만 샵 이용 예정이시거나 헤어/메이크업 방향이 크게 달라지는 경우에는, 촬영 시안과 잘 맞는지 미리 한 번만 공유해주시면 감사하겠습니다.</p>
+      <p data-lb="guide-hm1"><b class="hl">헤어/메이크업은 촬영에 포함되어 있지 않습니다.</b><br>직접 준비 혹은 원하시는 경우 샵에서 받고 오셔도 괜찮습니다.<br><br>다만 샵 이용 예정이시거나 헤어/메이크업 방향이 크게 달라지는 경우에는, 촬영 시안과 잘 맞는지 미리 한 번만 공유해주시면 감사하겠습니다.</p>
       <p data-lb="guide-hm2">메이크업은 <b>매트한 피부 표현</b>으로 준비해주시면 좋겠어요.<br>스튜디오 조명이 강하게 들어가는 편이라, 매트한 쪽을 추천드리며, 제 생각에 훨씬 잘 나오는 편이에요.</p></div>
     <div class="card"><div class="en">Clothes</div><h3>의상</h3>
       <p data-lb="guide-clothes1">의상은 시안을 참고한 기준으로 자유롭게 준비해주셔도 괜찮아요<br>시안이 정리되고 나면 참고하실 수 있는 이미지도 따로 같이 보내드리고 있어서, 그 안에서 편하게 취향 맞게 준비해주시면 됩니다. 예약이 확정되면 의상 준비 관련해서 별도로 안내 드릴게요</p>
@@ -1041,7 +1105,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
 <!-- 비하인드 -->
 <section class="sec-green" id="behind"><div class="wrap center reveal">
   <div class="kicker"><span class="kk"><span class="kk-ko">비하인드 촬영</span> <i class="kk-en">Behind The Scenes</i></span></div>
-  <p class="pull serif" style="margin-top:18px;" data-lb="behind-pull">촬영은<br>결과물뿐만 아니라<br>그 순간까지<br>함께 남아요.</p>
+  <p class="pull serif" style="margin-top:18px;" data-lb="behind-pull">촬영은<br>결과물뿐만 아니라<br>찍는 동안의 내 모습까지<br>함께 담겨요.</p>
   <div class="body">
     <p data-lb="behind-b1">촬영 중 자연스럽게 나오는 표정이나 움직임,<br>그날의 공기감 같은 것들을<br><b>빈티지 캠코더</b>로 함께 기록해드리고 있어요</p>
     <p data-lb="behind-b2">사진으로 남는 모습과는 또 다르게, <br>촬영하는 동안의 나를 그대로 담아볼 수 있어서 <br>나중에 보면 그때의 느낌이나 분위기가 조금 더 생생하게 <br>기억나는 기록이 되기도 해요.</p>
@@ -1096,7 +1160,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
         <div class="row"><span>워터마크 제거 (전체 사진 일괄)</span><span class="v">10,000원</span></div>
       </div>
     </div></div></div>
-    <div class="acc"><button class="q"><span class="qt"><span class="en">03 · Policy</span>변경 및 취소 규정<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
+    <div class="acc"><button class="q"><span class="qt"><span class="en">03 · Policy</span>대관 예약 변경 및 취소 규정<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
       일정이 확정되는 순간 <b>스튜디오 공간, 작가와 디자이너의 시간, <br>사전 테스트 촬영 준비 </b>까지 전부 그 일정에 맞춰 잡히게 됩니다.<br>취소나 변경이 생기면 그 모든 준비에 영향이 가는 점 꼭 참고 부탁드립니다.
       <div class="sub">예약 취소 · 환불</div>· 촬영일 기준 15일 전까지 → <b>80% 환불</b><br>· 촬영일 기준 14일 이내 → <b>환불 불가</b><br>· 14일 이내 예약 시에도 동일 적용<br>· 촬영 후 환불 불가
       <div class="sub">예약 변경</div>· 촬영일 기준 15일 전까지 <b style="display:inline-block">1회 변경 가능 · 수수료 <span style="white-space:nowrap">10,000원</span></b><br>· 14일 이내 변경 요청 시 기존 대관료로 재예약 불가, 대관료 재입금 후 새 예약으로 진행<br>· 예약 변경 후 환불 불가
@@ -1105,7 +1169,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
     <div class="acc"><button class="q"><span class="qt"><span class="en">04 · Standard</span>준비 기준 및 진행이 어려운 경우<span class="acc-hint">눌러서 자세히 보기</span></span><span class="pm">+</span></button><div class="a"><div class="inner">
       이번 촬영은 모델님이 원하는 모습을 함께 고민하고 만들어가는 작업이에요. 지금 보고 계신 시안부터 실제 촬영까지, 좋은 결과물을 위해 여러 과정에 걸쳐 시간과 노력을 들여 준비하고 있습니다.<div class="callout-box mini"><b>사전 준비 및 전달 기한은 촬영일 기준 5일 전까지입니다.</b></div>
       <p style="margin:12px 0 0">의상 착용 사진과 필요한 준비 내용을 기한 내 공유해 주셔야 촬영 방향을 함께 점검하고, 필요한 부분을 미리 조율할 수 있어요.</p>
-      <p style="margin:12px 0 0">촬영일 5일 전까지 필요한 준비가 확인되지 않거나 일정 조율, 시안 공유, 기본적인 소통이 원활하지 않아 촬영을 진행할 수 없는 경우에는 《03 변경 및 취소 규정》에 따라 <b>환불이 불가합니다.</b></p>
+      <p style="margin:12px 0 0">촬영일 5일 전까지 필요한 준비가 확인되지 않거나 일정 조율, 시안 공유, 기본적인 소통이 원활하지 않아 촬영을 진행할 수 없는 경우에는 《03 대관 예약 변경 및 취소 규정》에 따라 <b>환불이 불가합니다.</b></p>
       <p style="margin:12px 0 0">촬영 일정이 확정되면 준비와 정리 시간까지 고려해 스튜디오를 미리 예약하고, 저희도 그날에 맞춰 시간과 비용을 들여 촬영을 준비하고 있어요. 그렇기에 촬영이 진행되지 못하더라도 이미 지출한 대관료와 준비에 들인 시간은 결코 작지 않고, 되돌릴 수도 없습니다.</p>
       <p style="margin:12px 0 0">무엇보다 이런 상황이 생기지 않기를 바라는 마음에서, 촬영을 준비하는 과정과 필요한 안내사항을 지금 보고 계신 시안에 최대한 자세히 담아 전달드리고 있어요.</p>
       <p style="margin:12px 0 0"><b>저희가 모델님의 좋은 모습을 담기 위해 고민하고 준비하는 만큼, 모델님께서도 본인이 원하는 모습을 충분히 고민하고 준비해 주셨으면 좋겠습니다.</b></p>
@@ -1300,7 +1364,6 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
     ['process','진행 흐름'],   ['studio','촬영 공간'], ['notice','필독 공지'],
     ['cta','문의하기']
   ];
-  if (document.documentElement.classList.contains('sian-expired')) return;   /* 시안 열람 기간이 지난 화면 — 읽힘 통계에 섞이지 않게 기록하지 않는다 */
   var els   = SECTIONS.map(function(s){ return document.getElementById(s[0]); });
   var secs  = {};      // 섹션 → 머문 초
   var back  = {};      // 섹션 → 지나갔다가 '다시' 들어온 횟수 (어렵거나 중요했다는 신호)
@@ -1366,6 +1429,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
 
   setInterval(function(){
     if(document.hidden) return;              // 다른 탭·앱에 가 있으면 세지 않는다
+    if(/(^| )sian-(expired|checking|fold)( |$)/.test(document.documentElement.className)) return;
     var i = current(); if(i < 0) return;
     alive++;
     var sid = SECTIONS[i][0];
@@ -1424,7 +1488,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   }
 
   function send(){
-    if (document.documentElement.classList.contains('sian-expired')) return;
+    if (/(^| )sian-(expired|checking|fold)( |$)/.test(document.documentElement.className)) return;
     if(alive < 5) return;                    // 5초도 안 머문 건 버린다(봇·오클릭)
     if(seq >= MAX_SEQ) return;               // 조각 상한
     if(alive <= lastSentAlive) return;       // 지난번 이후 새로 본 게 없으면 안 보낸다
@@ -1494,6 +1558,7 @@ html.mo .mv-now, html.mo .mv-now *, html.mo .mv-now::before, html.mo .mv-now::af
   /* 밖으로 나갈 때 / 돌아올 때.
      폰에서는 앱 전환 때 visibilitychange 가 더 확실히 뜬다. pagehide 와 둘 다 건다. */
   document.addEventListener('visibilitychange', function(){
+    if(/(^| )sian-(expired|checking|fold)( |$)/.test(document.documentElement.className)){ awayFrom = 0; return; }
     if(document.hidden){
       var i = current();                     // 어느 대목에서 나갔나 — 핀터레스트 링크 위치가 여기서 보인다
       if(i >= 0){ var k = SECTIONS[i][0]; left[k] = (left[k] || 0) + 1; }
