@@ -304,7 +304,7 @@ section{position:relative; padding:84px 0;}
 .kicker .kk-en{font:italic 400 var(--t5)/1.4 var(--lat); letter-spacing:.01em; color:var(--ink-3);}
 :is(#direction,#concept,#structure,#guide,#process,#studio,#notice,#cta) .kicker::before{
   --chv:var(--ch); counter-reset:chx var(--chv);
-  content:counter(chx, upper-roman); content:counter(chx, upper-roman) / "";
+  content:counter(chx, decimal); content:counter(chx, decimal) / "";
   font:italic 400 var(--chn)/.78 var(--lat); color:var(--accent); letter-spacing:.07em; white-space:nowrap;}
 h2.big{font:300 var(--t2)/1.45 var(--kr); letter-spacing:-.008em; color:var(--ink); margin:0;}
 .center{text-align:left;}
@@ -547,7 +547,7 @@ footer a:hover{color:var(--ink); text-decoration-color:var(--ink-3);}
   .rent-bar .share{color:#000;}
 }
 
-:is(#direction,#concept,#structure,#guide,#process,#studio,#notice,#cta) .kicker::before{font-style:normal; font-weight:400; letter-spacing:.02em; color:var(--accentD);}
+:is(#direction,#concept,#structure,#guide,#process,#studio,#notice,#cta) .kicker::before{font-style:normal; font-weight:400; letter-spacing:.02em; color:var(--accentD); font-variation-settings:'opsz' 16;}
 .cb-num, #structure .card .en, .flow .f .fn, .fg-num, .how .steps b, .acc .q .pm{color:var(--accentD);}
 #structure .callout-box.mini, #studio .callout-box, .form-wrap, .inquiry-toast{box-shadow:none;}
 .rent-amt b{background:none;}
